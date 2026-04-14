@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: bureureung-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+        MYSQL_ROOT_PASSWORD: burr1234!
+        MYSQL_DATABASE: bureureung
+        TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7.4
+    container_name: bureureung-redis
+    restart: unless-stopped
+    ports:
+        - "6380:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  mysql_data:
+  redis-data:
