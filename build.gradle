@@ -45,6 +45,9 @@ dependencies {
 	// ------- P6Spy (SQL 로그) -------
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2'
 
+	// ------- env 설정 --------
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
 }
 
 tasks.named('test') {
