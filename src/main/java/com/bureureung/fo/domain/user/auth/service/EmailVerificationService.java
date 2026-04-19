@@ -31,6 +31,7 @@ public class EmailVerificationService {
             mailSender.send(email, MailContent.verificationCode(verification.getCode()));
         } catch (Exception e) {
             emailVerificationRepository.deleteById(email);
+            throw e;
         }
     }
 
