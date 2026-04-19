@@ -1,0 +1,11 @@
+### 회원가입 - 성공
+POST {{host}}/api/v1/users/signup
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "abc12345!",
+  "passwordConfirm": "abc12345!",
+  "nickname": "테스트 유저",
+  "phone": "01012345678"
+}

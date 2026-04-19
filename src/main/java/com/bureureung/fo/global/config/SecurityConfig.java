@@ -30,7 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 인증 없이 접근 가능한 URL
                 .requestMatchers(
-                        "/api/v1/auth/**",
+                        "/api/v1/users/signup",
                         "/swagger-ui/**",
                         "/v3/api-docs/**"
                 ).permitAll()

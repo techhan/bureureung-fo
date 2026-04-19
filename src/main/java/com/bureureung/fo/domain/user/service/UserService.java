@@ -18,7 +18,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void register(RegisterRequest request) {
+    public FoUser register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -26,9 +26,9 @@ public class UserService {
         if (userRepository.existsByNickname(request.nickname())) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
-
         String encodedPassword = passwordEncoder.encode(request.password());
-        userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
+
+        return userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
     }
 
 }
