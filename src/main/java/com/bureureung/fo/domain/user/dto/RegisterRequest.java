@@ -17,7 +17,7 @@ public record RegisterRequest(
         @Size(min = 5, max = 100, message = "이메일은 100자를 초과할 수 없습니다.")
         String email,
 
-        @NotBlank(message = "비밀번호는 필수입니다.")
+        @NotBlank(message = "비밀번호 확인은 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,20}$",
                 message = "비밀번호는 영문 소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."

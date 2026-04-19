@@ -3,7 +3,6 @@ package com.bureureung.fo.global.exception;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -46,7 +44,7 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(), errors);
 
         ErrorCode errorCode = ErrorCode.INVALID_INPUT;
-        return ApiResponse.fali(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage(), errors);
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage(), errors);
     }
 
     /**

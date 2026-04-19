@@ -1,6 +1,7 @@
 package com.bureureung.fo.domain.user.service;
 
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
+import com.bureureung.fo.domain.user.dto.UserResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
@@ -18,7 +19,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public FoUser register(RegisterRequest request) {
+    public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -27,8 +28,9 @@ public class UserService {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
         String encodedPassword = passwordEncoder.encode(request.password());
-
-        return userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
+        
+        FoUser savedUser = userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
+        return UserResponse.from(savedUser);
     }
 
 }

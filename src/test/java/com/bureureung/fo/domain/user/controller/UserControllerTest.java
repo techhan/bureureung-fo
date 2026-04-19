@@ -1,12 +1,12 @@
 package com.bureureung.fo.domain.user.controller;
 
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
+import com.bureureung.fo.domain.user.dto.UserResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,7 +45,7 @@ class UserControllerTest {
         // given
         var request = getRequest();
 
-        FoUser mockUser = FoUser.of(request.email(), request.password(), request.nickname(), request.phone());
+        UserResponse mockUser = UserResponse.from(FoUser.of(request.email(), request.password(), request.nickname(), request.phone()));
         ReflectionTestUtils.setField(mockUser, "id", 1L);
 
         when(userService.register(any(RegisterRequest.class))).thenReturn(mockUser);
@@ -81,8 +81,8 @@ class UserControllerTest {
         var request = getRequest("test@test1.com", "1234", "1234", "테스트1", "01012341234");
 
         mockMvc.perform(post(SIGNUP_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(print());
 
@@ -96,8 +96,8 @@ class UserControllerTest {
 
         // when
         mockMvc.perform(post(SIGNUP_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(print());
 
@@ -111,8 +111,8 @@ class UserControllerTest {
 
         // when
         mockMvc.perform(post(SIGNUP_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(print());
 
@@ -120,14 +120,14 @@ class UserControllerTest {
     }
 
     @Test
-    void 핸드폰_형식이_잘못되면_400을_응답한다() throws Exception{
+    void 핸드폰_형식이_잘못되면_400을_응답한다() throws Exception {
         // given
         var request = getRequest("test@test1.com", "abc12345!", "abc12345!", "테스트1", "01012341");
 
         // when
         mockMvc.perform(post(SIGNUP_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(print());
 
@@ -160,8 +160,8 @@ class UserControllerTest {
 
         // when & then
         mockMvc.perform(post(SIGNUP_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andDo(print());
 

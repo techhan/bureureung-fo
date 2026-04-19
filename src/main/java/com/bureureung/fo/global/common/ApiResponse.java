@@ -47,7 +47,7 @@ public class ApiResponse<T> {
     /**
      * 검증 실패 응답 (필드별 에러 포함)
      */
-    public static ResponseEntity<ApiResponse<Void>> fali(
+    public static ResponseEntity<ApiResponse<Void>> fail(
             HttpStatus status, String code, String message, Map<String, String> errors) {
         return ResponseEntity.status(status)
                 .body(new ApiResponse<>(false, code, message, null, errors));

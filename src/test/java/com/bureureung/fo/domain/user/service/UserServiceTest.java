@@ -43,6 +43,8 @@ class UserServiceTest {
         given(userRepository.existsByNickname(nickname)).willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn("encoded-1234");
 
+        given(userRepository.save(any(FoUser.class))).willAnswer(invocation -> invocation.getArgument(0)); //받은 그대로 반환
+
         //when
         userService.register(request);
 

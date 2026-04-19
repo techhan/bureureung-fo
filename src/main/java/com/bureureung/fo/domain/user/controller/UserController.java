@@ -2,7 +2,6 @@ package com.bureureung.fo.domain.user.controller;
 
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserResponse;
-import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -21,7 +20,6 @@ public class UserController {
 
     @PostMapping("/api/v1/users/signup")
     public ResponseEntity<ApiResponse<UserResponse>> signup(@RequestBody @Valid RegisterRequest request) {
-        FoUser savedUser = userService.register(request);
-        return ApiResponse.success(HttpStatus.CREATED, UserResponse.from(savedUser));
+        return ApiResponse.success(HttpStatus.CREATED, userService.register(request));
     }
 }

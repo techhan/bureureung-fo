@@ -49,8 +49,6 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REVIEW_E002", "이미 리뷰를 작성했습니다."),
     CANNOT_REVIEW_BEFORE_DELIVERY(HttpStatus.BAD_REQUEST, "REVIEW_E003", "배달 완료 후 리뷰 작성이 가능합니다.");
 
-    ;
-
 
     private final HttpStatus httpStatus;
     private final String code;
