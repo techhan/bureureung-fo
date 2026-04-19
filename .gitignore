@@ -36,10 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-
-# 환경별 설정 파일
-application-local.yml
-
 # AWS 키, 환경변수
 .env
 .env .local
