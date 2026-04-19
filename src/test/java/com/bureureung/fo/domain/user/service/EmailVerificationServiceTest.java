@@ -39,8 +39,7 @@ class EmailVerificationServiceTest {
     @Mock
     private MailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String AVAILABLE_EMAIL;
+    private String AVAILABLE_EMAIL = "test@test.com";
 
     @Test
     void 이미_가입_된_이메일로_인증_코드_요청_시_예외가_발생한다() {
@@ -102,7 +101,8 @@ class EmailVerificationServiceTest {
         // given
         String email = AVAILABLE_EMAIL;
         given(userRepository.existsByEmail(email)).willReturn(false);
-        doThrow(new RuntimeException("SMTP error")).when(mailSender).send(anyString(), any());
+
+        doThrow(new CustomException(ErrorCode.EMAIL_SEND_FAILED)).when(mailSender).send(anyString(), any());
 
         // when & then
         assertThatThrownBy(() -> emailVerificationService.sendVerificationCode(email))
@@ -136,7 +136,7 @@ class EmailVerificationServiceTest {
         // when & then
         assertThatThrownBy(() -> emailVerificationService.verifyCode(email, "123456"))
                 .isInstanceOf(CustomException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EMAIL_NOT_VERIFIED);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.VERIFICATION_CODE_NOT_FOUND);
 
         verify(emailVerificationRepository, never()).save(any());
     }

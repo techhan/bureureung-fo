@@ -77,7 +77,11 @@ class UserServiceTest {
         String email = "test@test.com";
         String nickname = "테스트";
 
+        EmailVerification verification = EmailVerification.issue(email);
+        verification.verify();
+
         given(userRepository.existsByEmail(email)).willReturn(true);
+        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
 
         var request = getRequest(email, nickname);
 
@@ -94,10 +98,15 @@ class UserServiceTest {
         // given
         String nickname = "테스트";
 
-        given(userRepository.existsByEmail("test@test.com")).willReturn(false);
-        given(userRepository.existsByNickname(nickname)).willReturn(true);
+        String email = "test@test.com";
+        EmailVerification verification = EmailVerification.issue(email);
+        verification.verify();
 
-        var request = getRequest("test@test.com", nickname);
+        given(userRepository.existsByEmail(email)).willReturn(false);
+        given(userRepository.existsByNickname(nickname)).willReturn(true);
+        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
+
+        var request = getRequest(email, nickname);
 
         // when & then
         assertThatThrownBy(() -> {

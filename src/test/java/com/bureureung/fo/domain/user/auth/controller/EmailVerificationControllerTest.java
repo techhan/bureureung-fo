@@ -60,7 +60,7 @@ class EmailVerificationControllerTest {
     @Test
     void 이메일_형식이_올바르지_않으면_400을_반환한다() throws Exception {
         // given
-        var request = new EmailSendRequest(AVAILABLE_EMAIL);
+        var request = new EmailSendRequest("test.com");
 
         // when & then
         mockMvc.perform(post(SEND_PATH)
