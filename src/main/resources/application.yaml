@@ -1,3 +1,35 @@
 spring:
   application:
     name: fo
+
+  profiles:
+    active: local # 기본 프로파일 활성화
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  threads:
+    virtual:
+      enabled: true
+
+
+# Swagger 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# JWT 만료 시간
+jwt:
+  access-token-expiration: 3600000 # 1시간
+  refresh-token-expiration: 1209600000 # 14일
+
+server:
+  port: 8081
