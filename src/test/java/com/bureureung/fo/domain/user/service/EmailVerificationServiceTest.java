@@ -39,7 +39,7 @@ class EmailVerificationServiceTest {
     @Mock
     private MailSender mailSender;
 
-    private String AVAILABLE_EMAIL = "test@test.com";
+    private final String AVAILABLE_EMAIL = "test@test.com";
 
     @Test
     void 이미_가입_된_이메일로_인증_코드_요청_시_예외가_발생한다() {

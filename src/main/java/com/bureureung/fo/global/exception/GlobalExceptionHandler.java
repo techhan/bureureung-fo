@@ -3,6 +3,8 @@ package com.bureureung.fo.global.exception;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -57,6 +59,16 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(), e.getMessage());
 
         ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
+    }
+
+    /**
+     * DB unique 제약 조건 위반 시 409 응답 (동시 요청으로 인한 중복 데이터 방지)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException e, HttpServletRequest request) {
+        log.warn("[DataIntegrityViolation] {} {}", request.getMethod(), request.getRequestURI());
+        ErrorCode errorCode = ErrorCode.DUPLICATE_RESOURCE;
         return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
     }
 

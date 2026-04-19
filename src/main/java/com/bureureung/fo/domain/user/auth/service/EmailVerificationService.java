@@ -27,7 +27,11 @@ public class EmailVerificationService {
         EmailVerification verification = EmailVerification.issue(email);
         emailVerificationRepository.save(verification);
 
-        mailSender.send(email, MailContent.verificationCode(verification.getCode()));
+        try {
+            mailSender.send(email, MailContent.verificationCode(verification.getCode()));
+        } catch (Exception e) {
+            emailVerificationRepository.deleteById(email);
+        }
     }
 
     public void verifyCode(String email, String code) {

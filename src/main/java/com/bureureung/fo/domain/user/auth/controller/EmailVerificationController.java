@@ -5,7 +5,6 @@ import com.bureureung.fo.domain.user.auth.dto.EmailVerifyRequest;
 import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

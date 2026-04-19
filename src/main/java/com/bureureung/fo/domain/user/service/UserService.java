@@ -2,7 +2,6 @@ package com.bureureung.fo.domain.user.service;
 
 import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.user.auth.repository.EmailVerificationRepository;
-import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
@@ -13,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
