@@ -2,7 +2,6 @@ package com.bureureung.fo.domain.user.controller;
 
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserResponse;
-import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
@@ -13,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +20,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -44,10 +43,7 @@ class UserControllerTest {
     void 회원가입에_성공하면_201을_응답한다() throws Exception {
         // given
         var request = getRequest();
-
-        UserResponse mockUser = UserResponse.from(FoUser.of(request.email(), request.password(), request.nickname(), request.phone()));
-        ReflectionTestUtils.setField(mockUser, "id", 1L);
-
+        var mockUser = new UserResponse(1L, request.email(), request.nickname());
         when(userService.register(any(RegisterRequest.class))).thenReturn(mockUser);
 
         // when
@@ -165,6 +161,23 @@ class UserControllerTest {
                 .andExpect(status().isConflict())
                 .andDo(print());
 
+    }
+
+    @Test
+    void 이메일_인증이_안되면_400을_응답한다() throws Exception {
+        // given
+        var request = getRequest();
+
+        willThrow(new CustomException(ErrorCode.EMAIL_NOT_VERIFIED))
+                .given(userService).register(any(RegisterRequest.class));
+
+        // when & then
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.EMAIL_NOT_VERIFIED.getCode()))
+                .andDo(print());
     }
 
     private RegisterRequest getRequest() {

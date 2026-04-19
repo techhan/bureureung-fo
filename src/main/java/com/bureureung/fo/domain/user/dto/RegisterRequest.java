@@ -20,7 +20,7 @@ public record RegisterRequest(
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,20}$",
-                message = "비밀번호는 영문 소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
+                message = "비밀번호는 영문 대소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
         )
         @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하로 입력해야 합니다.")
         String password,
