@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SmtpMailSender implements MailSender {
+public class SmtpEmailSender implements EmailSender {
 
     private final JavaMailSender javaMailSender;
 

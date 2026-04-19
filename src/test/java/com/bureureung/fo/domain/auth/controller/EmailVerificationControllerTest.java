@@ -1,9 +1,8 @@
-package com.bureureung.fo.domain.user.auth.controller;
+package com.bureureung.fo.domain.auth.controller;
 
-import com.bureureung.fo.domain.user.auth.dto.EmailSendRequest;
-import com.bureureung.fo.domain.user.auth.dto.EmailVerifyRequest;
-import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
-import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
+import com.bureureung.fo.domain.auth.dto.EmailSendRequest;
+import com.bureureung.fo.domain.auth.dto.EmailVerifyRequest;
+import com.bureureung.fo.domain.auth.service.EmailVerificationService;
 import com.bureureung.fo.global.config.SecurityConfig;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;

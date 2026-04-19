@@ -1,15 +1,14 @@
-package com.bureureung.fo.domain.user.auth.service;
+package com.bureureung.fo.domain.auth.service;
 
-import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
-import com.bureureung.fo.domain.user.auth.repository.EmailVerificationRepository;
+import com.bureureung.fo.domain.auth.entity.EmailVerification;
+import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.mail.MailContent;
-import com.bureureung.fo.global.mail.MailSender;
+import com.bureureung.fo.global.mail.EmailSender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +16,7 @@ public class EmailVerificationService {
 
     private final UserRepository userRepository;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final MailSender mailSender;
+    private final EmailSender emailSender;
 
     public void sendVerificationCode(String email) {
         if (userRepository.existsByEmail(email)) {
@@ -28,7 +27,7 @@ public class EmailVerificationService {
         emailVerificationRepository.save(verification);
 
         try {
-            mailSender.send(email, MailContent.verificationCode(verification.getCode()));
+            emailSender.send(email, MailContent.verificationCode(verification.getCode()));
         } catch (Exception e) {
             emailVerificationRepository.deleteById(email);
             throw e;

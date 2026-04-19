@@ -1,8 +1,7 @@
 package com.bureureung.fo.domain.user.service;
 
-import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
-import com.bureureung.fo.domain.user.auth.repository.EmailVerificationRepository;
-import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
+import com.bureureung.fo.domain.auth.entity.EmailVerification;
+import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.repository.UserRepository;
