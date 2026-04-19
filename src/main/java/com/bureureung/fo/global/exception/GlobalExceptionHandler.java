@@ -3,14 +3,16 @@ package com.bureureung.fo.global.exception;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
@@ -26,8 +28,7 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(),
                 errorCode.getCode(), errorCode.getMessage());
 
-        return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(ApiResponse.fail(errorCode.getCode(), errorCode.getMessage()));
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
     }
 
     /**
@@ -35,18 +36,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException e, HttpServletRequest request) {
-        String errorMessage = e.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError error : e.getBindingResult().getFieldErrors()) {
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
 
         log.warn("[ValidationException] {} {} - {}",
-                request.getMethod(), request.getRequestURI(), errorMessage);
+                request.getMethod(), request.getRequestURI(), errors);
 
         ErrorCode errorCode = ErrorCode.INVALID_INPUT;
-        return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(ApiResponse.fail(errorCode.getCode(), errorMessage));
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage(), errors);
     }
 
     /**
@@ -59,9 +58,17 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(), e.getMessage());
 
         ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(ApiResponse.fail(errorCode.getCode(), errorCode.getMessage()));
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
+    }
+
+    /**
+     * DB unique 제약 조건 위반 시 409 응답 (동시 요청으로 인한 중복 데이터 방지)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException e, HttpServletRequest request) {
+        log.warn("[DataIntegrityViolation] {} {}", request.getMethod(), request.getRequestURI());
+        ErrorCode errorCode = ErrorCode.DUPLICATE_RESOURCE;
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
     }
 
     /**
@@ -74,8 +81,6 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(), e);
 
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(ApiResponse.fail(errorCode.getCode(), errorCode.getMessage()));
+        return ApiResponse.fail(errorCode.getHttpStatus(), errorCode.getCode(), errorCode.getMessage());
     }
 }

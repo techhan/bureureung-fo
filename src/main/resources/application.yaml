@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -18,6 +18,25 @@ spring:
     virtual:
       enabled: true
 
+  # SMTP(Gmail)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      password:
 
 # Swagger 설정
 springdoc:
@@ -33,3 +52,10 @@ jwt:
 
 server:
   port: 8081
+ 
+# 이메일 인증 커스텀 설정
+email:
+  verification:
+    code-length: 6 # 인증 코드 자리수
+    expiration-minutes: 5 # 만료 시간(분)
+    subject: "[Bureureung] 이메일 인증 코드 안내"

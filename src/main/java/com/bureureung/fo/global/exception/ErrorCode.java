@@ -13,6 +13,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_E002", "허용되지 않은 HTTP 메서드입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_E003", "서버 오류가 발생했습니다."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_E004", "요청한 리소스를 찾을 수 없습니다."),
+    DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "COMMON_E005", "이미 존재하는 데이터입니다."),
 
     // ------ 인증/인가 (auth) ------
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_E001", "인증이 필요합니다."),
@@ -25,7 +26,13 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_E002", "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_E003", "이미 사용 중인 닉네임입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "USER_E004", "비밀번호가 올바르지 않습니다."),
-    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "USER_E005", "이메일 인증이 필요합니다."),
+
+    // ------ 이메일 (email) ------
+    EMAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY, "MAIL_E001", "메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "MAIL_E002", "이메일 인증이 필요합니다."),
+    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "MAIL_E003", "인증 코드가 일치하지 않습니다."),
+    VERIFICATION_CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "MAIL_E004", "인증 코드가 만료되었거나 존재하지 않습니다."),
+    EMAIL_ALREADY_VERIFIED(HttpStatus.CONFLICT, "MAIL_E005", "이미 인증이 완료된 이메일입니다."),
 
     // ------ 가게 (RESTAURANT) ------
     RESTAURANT_NOT_FOUND(HttpStatus.NOT_FOUND, "RESTAURANT_E001", "존재하지 않는 가게입니다."),
@@ -48,8 +55,6 @@ public enum ErrorCode {
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_E001", "존재하지 않는 리뷰입니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REVIEW_E002", "이미 리뷰를 작성했습니다."),
     CANNOT_REVIEW_BEFORE_DELIVERY(HttpStatus.BAD_REQUEST, "REVIEW_E003", "배달 완료 후 리뷰 작성이 가능합니다.");
-
-    ;
 
 
     private final HttpStatus httpStatus;

@@ -1,0 +1,28 @@
+### 회원가입 - 이메일 인증 코드 발송
+POST {{host}}/api/v1/users/email/send
+Content-Type: application/json
+
+{
+  "email": "devhan9117@gmail.com"
+}
+
+### 회원가입 - 이메일 인증 코드 검증
+POST {{host}}/api/v1/users/email/verify
+Content-Type: application/json
+
+{
+  "email": "devhan9117@gmail.com",
+  "code": "470706"
+}
+
+### 회원가입 - 성공
+POST {{host}}/api/v1/users/signup
+Content-Type: application/json
+
+{
+  "email": "devhan9117@gmail.com",
+  "password": "abc12345!",
+  "passwordConfirm": "abc12345!",
+  "nickname": "테스트 유저",
+  "phone": "01012345678"
+}

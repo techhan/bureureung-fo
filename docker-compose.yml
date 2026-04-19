@@ -6,9 +6,9 @@ services:
     ports:
       - "3306:3306"
     environment:
-        MYSQL_ROOT_PASSWORD: burr1234!
-        MYSQL_DATABASE: bureureung
-        TZ: Asia/Seoul
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: bureureung
+      TZ: Asia/Seoul
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_general_ci
@@ -20,7 +20,7 @@ services:
     container_name: bureureung-redis
     restart: unless-stopped
     ports:
-        - "6380:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
 
