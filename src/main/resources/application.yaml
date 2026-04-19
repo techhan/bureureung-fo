@@ -52,7 +52,7 @@ jwt:
 
 server:
   port: 8081
-
+ 
 # 이메일 인증 커스텀 설정
 email:
   verification:
