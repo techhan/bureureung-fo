@@ -37,7 +37,7 @@ class UserServiceTest {
         // given
         String email = "test@test.com";
         String nickname = "테스트";
-        var request = new RegisterRequest(email, "1234", nickname, "01012341234");
+        var request = getRequest(email, nickname);
 
         given(userRepository.existsByEmail(email)).willReturn(false);
         given(userRepository.existsByNickname(nickname)).willReturn(false);
@@ -63,10 +63,9 @@ class UserServiceTest {
         String email = "test@test.com";
         String nickname = "테스트";
 
-        given(userRepository.existsByEmail(email)).willReturn(false);
         given(userRepository.existsByEmail(email)).willReturn(true);
 
-        var request = new RegisterRequest(email, "1234", nickname, "01012341234");
+        var request = getRequest(email, nickname);
 
         // when & then
         assertThatThrownBy(() -> {
@@ -77,14 +76,14 @@ class UserServiceTest {
     }
 
     @Test
-    void 닉네임이_중복이면_회원가입에_실패하다() {
+    void 닉네임이_중복이면_회원가입에_실패한다() {
         // given
         String nickname = "테스트";
 
         given(userRepository.existsByEmail("test@test.com")).willReturn(false);
         given(userRepository.existsByNickname(nickname)).willReturn(true);
 
-        var request = new RegisterRequest("test@test.com", "1234", nickname, "01012341234");
+        var request = getRequest("test@test.com", nickname);
 
         // when & then
         assertThatThrownBy(() -> {
@@ -92,5 +91,9 @@ class UserServiceTest {
         }).isInstanceOf(CustomException.class).hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_NICKNAME);
 
         verify(userRepository, never()).save(any(FoUser.class));
+    }
+
+    private static RegisterRequest getRequest(String email, String nickname) {
+        return new RegisterRequest(email, "1234", "1234", nickname, "01012341234");
     }
 }
