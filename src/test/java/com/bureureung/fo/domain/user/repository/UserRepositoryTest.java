@@ -93,5 +93,4 @@ class UserRepositoryTest {
     public FoUser createUser(String email) {
         return FoUser.of(email, "1234", "테스트", "01012341234");
     }
-
 }

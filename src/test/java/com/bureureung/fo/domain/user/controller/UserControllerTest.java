@@ -15,6 +15,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
@@ -181,10 +183,10 @@ class UserControllerTest {
     }
 
     private RegisterRequest getRequest() {
-        return new RegisterRequest("test@test1.com", "abc12345!", "abc12345!", "테스트1", "01012341234");
+        return new RegisterRequest("test@test1.com", "abc12345!", "abc12345!", "테스트1", "01012341234", Map.of());
     }
 
     private RegisterRequest getRequest(String email, String password, String confirmPassword, String nickname, String phone) {
-        return new RegisterRequest(email, password, confirmPassword, nickname, phone);
+        return new RegisterRequest(email, password, confirmPassword, nickname, phone, Map.of());
     }
 }

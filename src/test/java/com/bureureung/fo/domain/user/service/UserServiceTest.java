@@ -4,7 +4,10 @@ import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.entity.FoUser;
+import com.bureureung.fo.domain.user.entity.FoUserTerms;
+import com.bureureung.fo.domain.user.entity.TermsType;
 import com.bureureung.fo.domain.user.repository.UserRepository;
+import com.bureureung.fo.domain.user.repository.UserTermsRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
@@ -15,14 +18,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -36,6 +40,9 @@ class UserServiceTest {
     @Mock
     private EmailVerificationRepository emailVerificationRepository;
 
+    @Mock
+    private UserTermsRepository userTermsRepository;
+
     @InjectMocks
     private UserService userService;
 
@@ -44,14 +51,22 @@ class UserServiceTest {
         // given
         String email = "test@test.com";
         String nickname = "테스트";
-        var request = getRequest(email, nickname);
 
-        EmailVerification verification = EmailVerification.issue(email);
-        verification.verify(); // 인증 완료 상태로 만들기
+        // 필수 약관 동의
+        Map<TermsType, Boolean> termsAgreements = Map.of(
+                TermsType.TERMS, true,
+                TermsType.PRIVACY, true
+        );
+
+        var request = getRequest(email, nickname, termsAgreements);
 
         given(userRepository.existsByEmail(email)).willReturn(false);
         given(userRepository.existsByNickname(nickname)).willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn("encoded-1234");
+
+        // 이메일 인증
+        EmailVerification verification = EmailVerification.issue(email);
+        verification.verify(); // 인증 완료 상태로 만들기
         given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
 
         given(userRepository.save(any(FoUser.class))).willAnswer(invocation -> invocation.getArgument(0)); //받은 그대로 반환
@@ -68,6 +83,34 @@ class UserServiceTest {
         assertThat(saved.getNickname()).isEqualTo(nickname);
         assertThat(saved.getPassword()).isEqualTo("encoded-1234");
         assertThat(saved.getPassword()).isNotEqualTo(request.password());
+
+        // 약관 동의 검증
+        ArgumentCaptor<List<FoUserTerms>> termsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userTermsRepository).saveAll(termsCaptor.capture());
+
+        var savedTerms = termsCaptor.getValue();
+
+        assertThat(savedTerms).hasSize(4);
+
+        FoUserTerms terms = savedTerms.stream()
+                .filter(t -> t.getTermsType() == TermsType.TERMS)
+                .findFirst().orElseThrow();
+        assertThat(terms.isAgreed()).isTrue();
+
+        FoUserTerms privacy = savedTerms.stream()
+                .filter(t -> t.getTermsType() == TermsType.PRIVACY)
+                .findFirst().orElseThrow();
+        assertThat(privacy.isAgreed()).isTrue();
+
+        FoUserTerms marketing = savedTerms.stream()
+                .filter(t -> t.getTermsType() == TermsType.MARKETING)
+                .findFirst().orElseThrow();
+        assertThat(marketing.isAgreed()).isFalse();
+
+        FoUserTerms nightMarketing = savedTerms.stream()
+                .filter(t -> t.getTermsType() == TermsType.NIGHT_MARKETING)
+                .findFirst().orElseThrow();
+        assertThat(nightMarketing.isAgreed()).isFalse();
     }
 
     @Test
@@ -135,6 +178,10 @@ class UserServiceTest {
     }
 
     private static RegisterRequest getRequest(String email, String nickname) {
-        return new RegisterRequest(email, "1234", "1234", nickname, "01012341234");
+        return new RegisterRequest(email, "1234", "1234", nickname, "01012341234", Map.of());
+    }
+
+    private static RegisterRequest getRequest(String email, String nickname, Map<TermsType, Boolean> termsAgreements) {
+        return new RegisterRequest(email, "1234", "1234", nickname, "01012341234", termsAgreements);
     }
 }
