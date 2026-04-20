@@ -39,8 +39,7 @@ class EmailVerificationControllerTest {
     @MockitoBean
     private EmailVerificationService emailVerificationService;
 
-    @Value("${spring.mail.username}")
-    private String AVAILABLE_EMAIL;
+    private String AVAILABLE_EMAIL = "test@test.com";
 
     @Test
     void 이메일_인증_코드_발송을_성공한다() throws Exception {

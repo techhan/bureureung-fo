@@ -169,4 +169,43 @@ class UserServiceTest {
 
         verify(userRepository, never()).save(any(FoUser.class));
     }
+
+    @Test
+    void 회원가입_시_약관_필수_동의를_하지_않으면_예외가_발생한다() {
+        // given
+        Map<TermsType, Boolean> termsMap = Map.of(
+                TermsType.TERMS, false,
+                TermsType.PRIVACY, true
+        );
+
+        var request = RegisterRequestFixture.createWithTerms(termsMap);
+
+        // when
+        assertThatThrownBy(() -> userService.register(request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REQUIRED_TERMS_NOT_AGREED);
+
+        // then
+        verify(userRepository, never()).save(any(FoUser.class));
+        verify(userTermsRepository, never()).save(any(FoUserTerms.class));
+    }
+
+    @Test
+    void 회원가입_시_필수_약관이_누락된_경우_예외가_발생한다() {
+        // given
+        Map<TermsType, Boolean> termsMap = Map.of(
+                TermsType.MARKETING, true
+        );
+
+        var request = RegisterRequestFixture.createWithTerms(termsMap);
+
+        // when
+        assertThatThrownBy(() -> userService.register(request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REQUIRED_TERMS_NOT_AGREED);
+
+        // then
+        verify(userRepository, never()).save(any(FoUser.class));
+        verify(userTermsRepository, never()).save(any(FoUserTerms.class));
+    }
 }
