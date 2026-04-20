@@ -1,4 +1,4 @@
-package com.bureureung.fo.global.config;
+package com.bureureung.fo.global.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
