@@ -32,9 +32,13 @@ public class RegisterRequestFixture {
                 nickname, "01012341234", requiredTermsMap);
     }
 
+    public static Object createWithPhone(String phone) {
+        return new RegisterRequest("test@test.com", "abc12345!","abc12345!",
+                "테스트", phone, requiredTermsMap);
+    }
+
     public static RegisterRequest createWithTerms(Map<TermsType, Boolean> termsMap) {
         return new RegisterRequest("test@test.com", "abc12345!", "abc12345!",
                 "테스트", "01012341234", termsMap);
     }
-
 }
