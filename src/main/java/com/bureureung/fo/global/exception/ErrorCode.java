@@ -20,14 +20,14 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_E002", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_E003", "만료된 토큰입니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "AUTH_E004", "접근 권한이 없습니다."),
-    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_E005" , "이메일과 비밀번호 정보를 찾을 수 없습니다." ),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_E005", "이메일과 비밀번호 정보를 찾을 수 없습니다."),
 
     // ------ 사용자 (user) ------
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_E001", "존재하지 않는 회원입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_E002", "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_E003", "이미 사용 중인 닉네임입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "USER_E004", "비밀번호가 올바르지 않습니다."),
-    REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "USER_E005" , "필수 약관에 동의해야 합니다."),
+    REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "USER_E005", "필수 약관에 동의해야 합니다."),
 
     // ------ 이메일 (email) ------
     EMAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY, "MAIL_E001", "메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요."),

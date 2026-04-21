@@ -53,4 +53,9 @@ public class FoUser extends BaseEntity {
         user.status = UserStatus.ACTIVE;
         return user;
     }
+
+    public void withdraw() {
+        this.deletedAt = LocalDateTime.now();
+        this.status = UserStatus.DELETED;
+    }
 }

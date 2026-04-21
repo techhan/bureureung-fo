@@ -1,10 +1,11 @@
 package com.bureureung.fo.domain.auth.service;
 
+import com.bureureung.fo.domain.auth.dto.LoginRequest;
+import com.bureureung.fo.domain.auth.dto.LoginResponse;
 import com.bureureung.fo.domain.auth.entity.RefreshToken;
 import com.bureureung.fo.domain.auth.repository.RefreshTokenRepository;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.repository.UserRepository;
-import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
@@ -14,9 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -51,10 +51,11 @@ class AuthServiceTest {
         String password = "abc12345!";
 
         FoUser user = FoUser.of(email, "abc12345!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", 1L);
         given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
         given(passwordEncoder.matches(password, user.getPassword())).willReturn(true);
-        given(jwtProvider.createAccessToken(any())).willReturn("access-token");
-        given(jwtProvider.createRefreshToken(any())).willReturn("refresh-token");
+        given(jwtProvider.createAccessToken(any(Long.class))).willReturn("access-token");
+        given(jwtProvider.createRefreshToken(any(Long.class))).willReturn("refresh-token");
 
         LoginRequest loginRequest = new LoginRequest(email, password);
 
@@ -117,6 +118,6 @@ class AuthServiceTest {
         // when
         assertThatThrownBy(() -> authService.login(new LoginRequest(email, password)))
                 .isInstanceOf(CustomException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_WITHDRAWN);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_FAILED);
     }
 }
