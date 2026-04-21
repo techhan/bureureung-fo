@@ -1,6 +1,9 @@
 package com.bureureung.fo.global.security;
 
+import com.bureureung.fo.global.exception.CustomException;
+import com.bureureung.fo.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -57,22 +60,23 @@ public class JwtProvider {
     /**
      * 토큰 유효성 검증
      */
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token);
-            return true;
+        } catch (ExpiredJwtException e) {
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 
     /**
      * 공통 토큰 생성 로직
      */
-    private String createToken(Long userId, long expiration) {
+    private String createToken(long userId, long expiration) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
