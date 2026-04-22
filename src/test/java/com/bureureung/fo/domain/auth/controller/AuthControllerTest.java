@@ -4,8 +4,6 @@ import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
 import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.domain.user.entity.FoUser;
-import com.bureureung.fo.domain.user.repository.UserRepository;
-import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
@@ -20,13 +18,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,9 +42,6 @@ class AuthControllerTest {
 
     @MockitoBean
     JwtProvider jwtProvider;
-
-    @MockitoBean
-    UserRepository userRepository;
 
     final String LOGIN_URL = "/api/v1/auth/login";
 
