@@ -6,15 +6,16 @@ import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import com.bureureung.fo.global.security.JwtProvider;
+import com.bureureung.fo.global.security.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.willThrow;
@@ -24,9 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
+@WebMvcTest(UserController.class)
+@Import(SecurityConfig.class)
 class UserControllerTest {
 
     @Autowired
@@ -34,6 +34,9 @@ class UserControllerTest {
 
     @MockitoBean
     UserService userService;
+
+    @MockitoBean
+    JwtProvider jwtProvider;
 
     @Autowired
     ObjectMapper objectMapper;

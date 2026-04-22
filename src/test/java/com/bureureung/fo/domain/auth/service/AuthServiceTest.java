@@ -119,5 +119,8 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(new LoginRequest(email, password)))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_FAILED);
+
+        // then
+        verify(refreshTokenRepository, never()).save(any());
     }
 }
