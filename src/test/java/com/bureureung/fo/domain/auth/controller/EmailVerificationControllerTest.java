@@ -3,6 +3,7 @@ package com.bureureung.fo.domain.auth.controller;
 import com.bureureung.fo.domain.auth.dto.EmailSendRequest;
 import com.bureureung.fo.domain.auth.dto.EmailVerifyRequest;
 import com.bureureung.fo.domain.auth.service.EmailVerificationService;
+import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
@@ -34,6 +35,9 @@ class EmailVerificationControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private JwtProvider jwtProvider;
 
     @MockitoBean
     private EmailVerificationService emailVerificationService;
