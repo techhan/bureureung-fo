@@ -22,12 +22,12 @@ public class EmailVerificationController {
     @PostMapping("/send")
     public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@RequestBody @Valid EmailSendRequest request) {
         emailVerificationService.sendVerificationCode(request.email());
-        return ResponseEntity.ok().build();
+        return ApiResponse.success();
     }
 
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<Void>> verifyEmailCode(@RequestBody @Valid EmailVerifyRequest request) {
         emailVerificationService.verifyCode(request.email(), request.code());
-        return ResponseEntity.ok().build();
+        return ApiResponse.success();
     }
 }
