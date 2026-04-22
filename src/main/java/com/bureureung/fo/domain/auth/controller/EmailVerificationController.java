@@ -3,6 +3,7 @@ package com.bureureung.fo.domain.auth.controller;
 import com.bureureung.fo.domain.auth.dto.EmailSendRequest;
 import com.bureureung.fo.domain.auth.dto.EmailVerifyRequest;
 import com.bureureung.fo.domain.auth.service.EmailVerificationService;
+import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +20,13 @@ public class EmailVerificationController {
     private final EmailVerificationService emailVerificationService;
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendVerificationCode(@RequestBody @Valid EmailSendRequest request) {
+    public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@RequestBody @Valid EmailSendRequest request) {
         emailVerificationService.sendVerificationCode(request.email());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> verifyEmailCode(@RequestBody @Valid EmailVerifyRequest request) {
+    public ResponseEntity<ApiResponse<Void>> verifyEmailCode(@RequestBody @Valid EmailVerifyRequest request) {
         emailVerificationService.verifyCode(request.email(), request.code());
         return ResponseEntity.ok().build();
     }
