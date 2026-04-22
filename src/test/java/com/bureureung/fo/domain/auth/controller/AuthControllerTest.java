@@ -107,6 +107,24 @@ class AuthControllerTest {
     }
 
     @Test
+    void 토큰_재발급을_성공한다() throws Exception {
+        // given
+        FoUser user = FoUser.of("test@test.com", "abc12345!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(authService.refresh(anyString()))
+                .willReturn(LoginResponse.of("new-access-token", "new-refresh-token", user));
+
+        // when
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"old-refresh-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.data.refreshToken").value("new-refresh-token"));
+    }
+
+    @Test
     void 로그아웃을_성공한다() throws Exception {
         // given
         String accessToken = "access-token";
