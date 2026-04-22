@@ -1,5 +1,6 @@
 package com.bureureung.fo.global.security;
 
+import com.bureureung.fo.global.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,20 +24,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorization = request.getHeader("Authorization");
-        if(authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authorization.substring(7);
-        jwtProvider.validateToken(token);
-        long userId = jwtProvider.getUserId(token);
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
+        try {
+            long userId = jwtProvider.getUserId(token);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+        } catch (CustomException e) {
+            response.setStatus(e.getErrorCode().getHttpStatus().value());
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":false,\"code\":\"" + e.getErrorCode().getCode()
+                    + "\",\"message\":\"" + e.getErrorCode().getMessage() + "\"}");
+            return;
+        }
+        
+        jwtProvider.validateToken(token);
+
 
         filterChain.doFilter(request, response);
     }
