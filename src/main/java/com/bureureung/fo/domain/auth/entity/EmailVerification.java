@@ -1,4 +1,4 @@
-package com.bureureung.fo.domain.user.auth.entity;
+package com.bureureung.fo.domain.auth.entity;
 
 import lombok.Builder;
 import lombok.Getter;

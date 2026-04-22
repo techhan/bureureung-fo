@@ -22,5 +22,6 @@ spring:
 # JWT
 jwt:
   secret: ${JWT_SECRET}
-
+  access-expiration: 1800000 # 30분 (밀리초)
+  refresh-expiration: 1209600000 # 14일 (밀리초)
 #AWS S3 (추후 추가 예정)

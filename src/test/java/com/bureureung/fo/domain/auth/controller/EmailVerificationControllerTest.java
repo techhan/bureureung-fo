@@ -1,16 +1,15 @@
-package com.bureureung.fo.domain.user.auth.controller;
+package com.bureureung.fo.domain.auth.controller;
 
-import com.bureureung.fo.domain.user.auth.dto.EmailSendRequest;
-import com.bureureung.fo.domain.user.auth.dto.EmailVerifyRequest;
-import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
-import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
-import com.bureureung.fo.global.config.SecurityConfig;
+import com.bureureung.fo.domain.auth.dto.EmailSendRequest;
+import com.bureureung.fo.domain.auth.dto.EmailVerifyRequest;
+import com.bureureung.fo.domain.auth.service.EmailVerificationService;
+import com.bureureung.fo.global.security.JwtProvider;
+import com.bureureung.fo.global.security.SecurityConfig;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -38,10 +37,12 @@ class EmailVerificationControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
+    private JwtProvider jwtProvider;
+
+    @MockitoBean
     private EmailVerificationService emailVerificationService;
 
-    @Value("${spring.mail.username}")
-    private String AVAILABLE_EMAIL;
+    private String AVAILABLE_EMAIL = "test@test.com";
 
     @Test
     void 이메일_인증_코드_발송을_성공한다() throws Exception {

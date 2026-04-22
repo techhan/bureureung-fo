@@ -1,6 +1,6 @@
 package com.bureureung.fo.global.mail;
 
-public interface MailSender {
+public interface EmailSender {
 
     /**
      * 이메일을 발송한다.

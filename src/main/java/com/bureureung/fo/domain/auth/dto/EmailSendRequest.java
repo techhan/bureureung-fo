@@ -1,4 +1,4 @@
-package com.bureureung.fo.domain.user.auth.dto;
+package com.bureureung.fo.domain.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,20 +1,18 @@
-package com.bureureung.fo.domain.user.service;
+package com.bureureung.fo.domain.auth.service;
 
-import com.bureureung.fo.domain.user.auth.entity.EmailVerification;
-import com.bureureung.fo.domain.user.auth.service.EmailVerificationService;
-import com.bureureung.fo.domain.user.auth.repository.EmailVerificationRepository;
+import com.bureureung.fo.domain.auth.entity.EmailVerification;
+import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.mail.MailContent;
-import com.bureureung.fo.global.mail.MailSender;
+import com.bureureung.fo.global.mail.EmailSender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Optional;
 
@@ -37,7 +35,7 @@ class EmailVerificationServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private MailSender mailSender;
+    private EmailSender emailSender;
 
     private final String AVAILABLE_EMAIL = "test@test.com";
 
@@ -54,7 +52,7 @@ class EmailVerificationServiceTest {
                 .hasMessage(ErrorCode.DUPLICATE_EMAIL.getMessage());
 
         // 메일 발송 호출 X
-        verify(mailSender, never()).send(anyString(), any());
+        verify(emailSender, never()).send(anyString(), any());
         verify(emailVerificationRepository, never()).save(any());
     }
 
@@ -89,7 +87,7 @@ class EmailVerificationServiceTest {
 
         // then
         ArgumentCaptor<MailContent> captor = ArgumentCaptor.forClass(MailContent.class);
-        verify(mailSender).send(eq(email), captor.capture());
+        verify(emailSender).send(eq(email), captor.capture());
 
         MailContent sent = captor.getValue();
         assertThat(sent.body()).containsPattern("\\d{6}");
@@ -102,7 +100,7 @@ class EmailVerificationServiceTest {
         String email = AVAILABLE_EMAIL;
         given(userRepository.existsByEmail(email)).willReturn(false);
 
-        doThrow(new CustomException(ErrorCode.EMAIL_SEND_FAILED)).when(mailSender).send(anyString(), any());
+        doThrow(new CustomException(ErrorCode.EMAIL_SEND_FAILED)).when(emailSender).send(anyString(), any());
 
         // when & then
         assertThatThrownBy(() -> emailVerificationService.sendVerificationCode(email))

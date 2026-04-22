@@ -1,10 +1,10 @@
 package com.bureureung.fo.domain.user.dto;
 
+import com.bureureung.fo.domain.user.entity.TermsType;
 import com.bureureung.fo.domain.user.validation.PasswordMatch;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
+import java.util.Map;
 
 @PasswordMatch
 public record RegisterRequest(
@@ -40,5 +40,8 @@ public record RegisterRequest(
                 regexp = "^010\\d{8}$",
                 message = "전화번호 형식이 올바르지 않습니다."
         )
-        String phone) {
+        String phone,
+
+        @NotNull(message = "약관 동의는 필수입니다.")
+        Map<TermsType, Boolean> termsMap) {
 }
