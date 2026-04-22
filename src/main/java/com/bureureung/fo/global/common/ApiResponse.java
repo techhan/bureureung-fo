@@ -21,6 +21,14 @@ public class ApiResponse<T> {
     private final Map<String, String> errors;
 
     /**
+     * 성공 응답 생성 (데이터만)
+     */
+    public static <T> ResponseEntity<ApiResponse<T>> success(T data) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(true, "SUCCESS", null, data, null));
+    }
+
+    /**
      * 성공 응답 생성 (데이터 포함)
      */
     public static <T> ResponseEntity<ApiResponse<T>> success(HttpStatus status, T data) {
