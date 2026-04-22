@@ -131,7 +131,7 @@ class AuthControllerTest {
         Long userId = 1L;
 
         // JwtAuthenticationFilter가 토큰을 통과시키도록 stubbing
-        given(jwtProvider.getUserId(accessToken)).willReturn(userId);
+        given(jwtProvider.validateAndGetUserId(accessToken)).willReturn(userId);
 
         // when & then
         mockMvc.perform(post("/api/v1/auth/logout")
