@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,8 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,8 +58,8 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(post(LOGIN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"));
@@ -68,19 +68,19 @@ class AuthControllerTest {
     }
 
     @Test
-    void 이메일이_비어있으면_400을_응답한다() throws Exception{
+    void 이메일이_비어있으면_400을_응답한다() throws Exception {
         LoginRequest request = new LoginRequest("", "abc12345!");
 
         mockMvc.perform(post(LOGIN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
         verify(authService, never()).login(any());
     }
 
     @Test
-    void 비밀번호가_비어있으면_400을_응답한다() throws Exception{
+    void 비밀번호가_비어있으면_400을_응답한다() throws Exception {
         LoginRequest request = new LoginRequest("test@test.com", "");
 
         mockMvc.perform(post(LOGIN_URL)
@@ -104,5 +104,22 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 로그아웃을_성공한다() throws Exception {
+        // given
+        String accessToken = "access-token";
+        Long userId = 1L;
+
+        // JwtAuthenticationFilter가 토큰을 통과시키도록 stubbing
+        given(jwtProvider.getUserId(accessToken)).willReturn(userId);
+
+        // when & then
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+
+        verify(authService).logout(userId);
     }
 }

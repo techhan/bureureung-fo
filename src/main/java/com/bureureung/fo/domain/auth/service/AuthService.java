@@ -41,4 +41,30 @@ public class AuthService {
 
         return LoginResponse.of(accessToken, refreshToken, findUser);
     }
+
+    public LoginResponse refresh(String oldRefreshToken) {
+        jwtProvider.validateToken(oldRefreshToken);
+
+        long userId = jwtProvider.getUserId(oldRefreshToken);
+
+        RefreshToken savedToken = refreshTokenRepository.findById(userId).
+                orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
+
+        if (!savedToken.getRefreshToken().equals(oldRefreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+
+        FoUser foUser = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        String accessToken = jwtProvider.createAccessToken(userId);
+        String refreshToken = jwtProvider.createRefreshToken(userId);
+
+        refreshTokenRepository.save(RefreshToken.of(userId, refreshToken));
+
+        return LoginResponse.of(accessToken, refreshToken, foUser);
+    }
+
+    public void logout(Long userId) {
+        refreshTokenRepository.deleteById(userId);
+    }
 }

@@ -9,6 +9,7 @@ import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
+import org.aspectj.util.Reflection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,8 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -123,4 +123,78 @@ class AuthServiceTest {
         // then
         verify(refreshTokenRepository, never()).save(any());
     }
+
+    @Test
+    void 토큰_재발급을_성공한다() {
+
+        // token
+        String oldRefreshToken = "old-refresh-token";
+        Long userId = 1L;
+
+        given(jwtProvider.getUserId(oldRefreshToken)).willReturn(userId);
+        given(refreshTokenRepository.findById(userId))
+                .willReturn(Optional.of(RefreshToken.of(userId, oldRefreshToken)));
+        given(jwtProvider.createAccessToken(userId)).willReturn("new-access-token");
+        given(jwtProvider.createRefreshToken(userId)).willReturn("new-refresh-token");
+
+        FoUser user = FoUser.of("test@test.com", "asb1234!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", 1L);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        // when
+        LoginResponse response = authService.refresh(oldRefreshToken);
+
+        // then
+        assertThat(response.accessToken()).isEqualTo("new-access-token");
+        assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
+        verify(refreshTokenRepository).save(any(RefreshToken.class));
+
+    }
+
+    @Test
+    void Redis에_없는_토큰이면_쟈발급에_실패한다() {
+        //given
+        String refreshToken = "unkown-refresh-token";
+        Long userId = 1L;
+
+        given(jwtProvider.getUserId(refreshToken)).willReturn(userId);
+        given(refreshTokenRepository.findById(userId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void 탈취된_토큰이면_재발급에_실패한다() {
+        // given
+        String stolenToken = "stolen-token";
+        Long userId = 1L;
+
+        given(jwtProvider.getUserId(stolenToken)).willReturn(userId);
+        given(refreshTokenRepository.findById(userId))
+                .willReturn(Optional.of(RefreshToken.of(userId, "current-refresh-token")));
+
+        // when & then
+        assertThatThrownBy(() -> authService.refresh(stolenToken))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void 로그아웃을_성공한다() {
+
+        Long userId = 1L;
+
+        authService.logout(userId);
+
+        verify(refreshTokenRepository).deleteById(userId);
+    }
+
+
 }
