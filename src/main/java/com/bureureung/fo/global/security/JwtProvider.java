@@ -74,6 +74,24 @@ public class JwtProvider {
     }
 
     /**
+     * 토큰 유효성 검증 + userId 추출 후 반환
+     */
+    public long validateAndGetUserId(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Long.parseLong(claims.getSubject());
+        } catch (ExpiredJwtException e) {
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+    }
+
+    /**
      * 공통 토큰 생성 로직
      */
     private String createToken(long userId, long expiration) {
