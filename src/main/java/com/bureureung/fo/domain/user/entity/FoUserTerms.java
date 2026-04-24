@@ -2,7 +2,9 @@ package com.bureureung.fo.domain.user.entity;
 
 import com.bureureung.fo.global.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +14,8 @@ import java.util.Map;
 @Getter
 @Table(name = "fo_user_terms",
         uniqueConstraints = {
-            @UniqueConstraint(columnNames = {"fo_user_id", "terms_type"})})
+                @UniqueConstraint(columnNames = {"fo_user_id", "terms_type"})})
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FoUserTerms extends BaseEntity {
 
     @Id
