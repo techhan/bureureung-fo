@@ -5,11 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 
 import java.security.SecureRandom;
 
 @Getter
-@RedisHash(value = "email_verification", timeToLive = 300)
+@RedisHash(value = "email_verification")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class EmailVerification {
 
@@ -22,11 +23,15 @@ public class EmailVerification {
 
     private boolean isVerified;
 
+    @TimeToLive
+    private long ttl;
+
     @Builder
     private EmailVerification(String email, String code) {
         this.email = email;
         this.code = code;
         this.isVerified = false;
+        this.ttl = 300; // 5분
     }
 
     /**
@@ -46,5 +51,12 @@ public class EmailVerification {
     public static EmailVerification issue(String email) {
         String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
         return EmailVerification.builder().email(email).code(code).build();
+    }
+
+    /**
+     * 이메일 인증 성공 시 TTL 연장
+     */
+    public void extendTtl() {
+        this.ttl = 1800; // 30분으로 연장
     }
 }

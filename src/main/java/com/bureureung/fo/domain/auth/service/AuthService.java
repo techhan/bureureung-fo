@@ -43,9 +43,8 @@ public class AuthService {
     }
 
     public LoginResponse refresh(String oldRefreshToken) {
-        jwtProvider.validateToken(oldRefreshToken);
 
-        long userId = jwtProvider.getUserId(oldRefreshToken);
+        long userId = jwtProvider.validateAndGetUserId(oldRefreshToken);
 
         RefreshToken savedToken = refreshTokenRepository.findById(userId).
                 orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));

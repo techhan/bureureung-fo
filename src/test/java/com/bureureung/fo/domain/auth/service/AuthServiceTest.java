@@ -131,7 +131,7 @@ class AuthServiceTest {
         String oldRefreshToken = "old-refresh-token";
         Long userId = 1L;
 
-        given(jwtProvider.getUserId(oldRefreshToken)).willReturn(userId);
+        given(jwtProvider.validateAndGetUserId(oldRefreshToken)).willReturn(userId);
         given(refreshTokenRepository.findById(userId))
                 .willReturn(Optional.of(RefreshToken.of(userId, oldRefreshToken)));
         given(jwtProvider.createAccessToken(userId)).willReturn("new-access-token");
@@ -157,7 +157,7 @@ class AuthServiceTest {
         String refreshToken = "unkown-refresh-token";
         Long userId = 1L;
 
-        given(jwtProvider.getUserId(refreshToken)).willReturn(userId);
+        given(jwtProvider.validateAndGetUserId(refreshToken)).willReturn(userId);
         given(refreshTokenRepository.findById(userId)).willReturn(Optional.empty());
 
         // when & then
@@ -174,7 +174,7 @@ class AuthServiceTest {
         String stolenToken = "stolen-token";
         Long userId = 1L;
 
-        given(jwtProvider.getUserId(stolenToken)).willReturn(userId);
+        given(jwtProvider.validateAndGetUserId(stolenToken)).willReturn(userId);
         given(refreshTokenRepository.findById(userId))
                 .willReturn(Optional.of(RefreshToken.of(userId, "current-refresh-token")));
 

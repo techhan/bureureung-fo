@@ -47,6 +47,7 @@ public class EmailVerificationService {
         }
 
         verification.verify();
+        verification.extendTtl();
         emailVerificationRepository.save(verification);
     }
 }

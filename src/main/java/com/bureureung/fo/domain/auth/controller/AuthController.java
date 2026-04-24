@@ -2,8 +2,8 @@ package com.bureureung.fo.domain.auth.controller;
 
 import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
+import com.bureureung.fo.domain.auth.dto.RefreshRequest;
 import com.bureureung.fo.domain.auth.service.AuthService;
-import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody @Valid LoginRequest request) {
         return ApiResponse.success(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@RequestBody @Valid RefreshRequest request) {
+        return ApiResponse.success(authService.refresh(request.refreshToken()));
     }
 
     @PostMapping("/logout")
