@@ -1,5 +1,6 @@
 package com.bureureung.fo.domain.user.service;
 
+import com.bureureung.fo.domain.auth.dto.UserProfileResponse;
 import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,16 @@ public class UserService {
         userTermsRepository.saveAll(FoUserTerms.of(savedUser.getId(), request.termsMap()));
 
         return UserResponse.from(savedUser);
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getProfile(Long userId) {
+        FoUser findUser = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        List<FoUserTerms> termsList = userTermsRepository.findByFoUserId(userId);
+
+        return UserProfileResponse.of(findUser, termsList);
     }
 
     private void validateRegister(RegisterRequest request) {

@@ -1,8 +1,9 @@
 package com.bureureung.fo.domain.user.service;
 
+import com.bureureung.fo.domain.auth.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
-import com.bureureung.fo.domain.user.dto.RegisterRequest;
+import com.bureureung.fo.domain.user.dto.UserResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.TermsType;
@@ -18,16 +19,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -207,5 +211,45 @@ class UserServiceTest {
         // then
         verify(userRepository, never()).save(any(FoUser.class));
         verify(userTermsRepository, never()).save(any(FoUserTerms.class));
+    }
+
+    @Test
+    void 본인의_회원_정보를_조회한다() {
+        // given
+        Long userId = 1L;
+        FoUser user = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        List<FoUserTerms> terms = List.of(
+                FoUserTerms.of(userId, TermsType.TERMS, true),
+                FoUserTerms.of(userId, TermsType.PRIVACY, true),
+                FoUserTerms.of(userId, TermsType.MARKETING, false),
+                FoUserTerms.of(userId, TermsType.NIGHT_MARKETING, false)
+        );
+
+        given(userTermsRepository.findByFoUserId(userId)).willReturn(terms);
+
+        // when
+        var userResponse = userService.getProfile(userId);
+
+        // then
+        assertThat(userResponse.id()).isEqualTo(user.getId());
+        assertThat(userResponse.nickname()).isEqualTo(user.getNickname());
+        assertThat(userResponse.email()).isEqualTo(user.getEmail());
+        assertThat(userResponse.phone()).isEqualTo(user.getPhone());
+
+        assertThat(userResponse.terms()).hasSize(4);
+        Map<TermsType, Boolean> termsMap = userResponse.terms().stream()
+                .collect(Collectors.toMap(
+                        FoUserTermsResponse::termsType,
+                        FoUserTermsResponse::isAgreed
+                ));
+
+        assertThat(termsMap.get(TermsType.TERMS)).isTrue();
+        assertThat(termsMap.get(TermsType.PRIVACY)).isTrue();
+        assertThat(termsMap.get(TermsType.MARKETING)).isFalse();
+        assertThat(termsMap.get(TermsType.NIGHT_MARKETING)).isFalse();
     }
 }
