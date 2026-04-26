@@ -17,7 +17,7 @@ public class PasswordVerification {
     private Long userId;
 
     private String token;
-
+    
     public static PasswordVerification of(Long userId, String token) {
         return new PasswordVerification(userId, token);
     }

@@ -2,12 +2,17 @@ package com.bureureung.fo.domain.user.service;
 
 import com.bureureung.fo.domain.auth.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.auth.entity.EmailVerification;
+import com.bureureung.fo.domain.auth.entity.PasswordVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
-import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
+import com.bureureung.fo.domain.user.dto.UserProfileRequest;
+import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
+import com.bureureung.fo.domain.user.entity.FoUserTermsHistory;
 import com.bureureung.fo.domain.user.entity.TermsType;
 import com.bureureung.fo.domain.user.repository.UserRepository;
+import com.bureureung.fo.domain.user.repository.UserTermsHistoryRepository;
 import com.bureureung.fo.domain.user.repository.UserTermsRepository;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
@@ -28,7 +33,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,19 +42,25 @@ import static org.mockito.Mockito.verify;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Mock
-    private EmailVerificationRepository emailVerificationRepository;
+    EmailVerificationRepository emailVerificationRepository;
 
     @Mock
-    private UserTermsRepository userTermsRepository;
+    UserTermsRepository userTermsRepository;
+
+    @Mock
+    PasswordVerificationRepository passwordVerificationRepository;
+
+    @Mock
+    UserTermsHistoryRepository userTermsHistoryRepository;
 
     @InjectMocks
-    private UserService userService;
+    UserService userService;
 
     @Test
     void 회원가입을_한다() {
@@ -265,5 +276,134 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
     }
 
+    @Test
+    void 회원_정보를_수정한다() {
 
+        // given
+        Long userId = 1L;
+        FoUser originUser
+                = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        List<FoUserTerms> originTerms = List.of(
+                FoUserTerms.of(userId, TermsType.TERMS, true),
+                FoUserTerms.of(userId, TermsType.PRIVACY, true),
+                FoUserTerms.of(userId, TermsType.MARKETING, false),
+                FoUserTerms.of(userId, TermsType.NIGHT_MARKETING, false)
+        );
+
+        String token = "verification-token";
+        PasswordVerification passwordVerification = PasswordVerification.of(userId, token);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
+        given(userTermsRepository.findByFoUserId(userId)).willReturn(originTerms);
+
+        Map<TermsType, Boolean> newTerms = Map.of(
+                TermsType.TERMS, true,
+                TermsType.PRIVACY, true,
+                TermsType.MARKETING, true,
+                TermsType.NIGHT_MARKETING, false);
+
+        UserProfileRequest request = UserProfileRequest.of(token, "닉네임수정", "01011111111", newTerms);
+
+        // when
+        UserProfileResponse response = userService.updateProfile(userId, request);
+
+        // then
+        assertThat(response.nickname()).isEqualTo("닉네임수정");
+        assertThat(response.phone()).isEqualTo("01011111111");
+
+        var marketingTerm = response.terms().stream()
+                .filter(t -> t.termsType() == TermsType.MARKETING)
+                .findFirst().orElseThrow();
+        assertThat(marketingTerm.isAgreed()).isTrue();
+
+        verify(passwordVerificationRepository).deleteById(userId);
+
+        ArgumentCaptor<FoUserTermsHistory> historyCaptor = ArgumentCaptor.forClass(FoUserTermsHistory.class);
+        verify(userTermsHistoryRepository).save(historyCaptor.capture());
+
+        FoUserTermsHistory savedHistory = historyCaptor.getValue();
+        assertThat(savedHistory.getTermsType()).isEqualTo(TermsType.MARKETING);
+        assertThat(savedHistory.isAgreed()).isTrue();
+    }
+
+    @Test
+    void 존재하지_않는_회원의_정보_수정에_실패한다() {
+
+        //given
+        Long userId = 1L;
+        given(userRepository.findById(1L)).willReturn(Optional.empty());
+        Map<TermsType, Boolean> newTerms = Map.of(
+                TermsType.TERMS, true,
+                TermsType.PRIVACY, true,
+                TermsType.MARKETING, true,
+                TermsType.NIGHT_MARKETING, false);
+
+        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+                newTerms);
+
+        // when
+        assertThatThrownBy(() -> userService.updateProfile(userId, request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+
+        // then
+        verify(userTermsRepository, never()).findByFoUserId(any());
+        verify(passwordVerificationRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void 회원_정보_수정_시_비밀번호_인증_토큰이_유효하지_않으면_예외가_발생한다() {
+
+        // given
+        Long userId = 1L;
+        FoUser originUser
+                = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        Map<TermsType, Boolean> newTerms = Map.of(
+                TermsType.TERMS, true,
+                TermsType.PRIVACY, true,
+                TermsType.MARKETING, true,
+                TermsType.NIGHT_MARKETING, false);
+        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+                newTerms);
+
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(PasswordVerification.of(userId, "invalid-token")));
+
+        // when
+        assertThatThrownBy(() -> userService.updateProfile(userId, request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+
+        verify(userTermsRepository, never()).findByFoUserId(any());
+        verify(passwordVerificationRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void 회원_정보_수정_시_Redis에_토큰이_없으면_예외가_발생한다() {
+        // given
+        Long userId = 1L;
+        FoUser originUser
+                = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        Map<TermsType, Boolean> newTerms = Map.of(
+                TermsType.TERMS, true,
+                TermsType.PRIVACY, true,
+                TermsType.MARKETING, true,
+                TermsType.NIGHT_MARKETING, false);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
+
+        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+                newTerms);
+
+        // when
+        assertThatThrownBy(() -> userService.updateProfile(userId, request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+
+        verify(userTermsRepository, never()).findByFoUserId(any());
+        verify(passwordVerificationRepository, never()).deleteById(any());
+    }
 }

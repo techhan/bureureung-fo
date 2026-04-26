@@ -1,6 +1,7 @@
-package com.bureureung.fo.domain.auth.dto;
+package com.bureureung.fo.domain.user.dto;
 
 
+import com.bureureung.fo.domain.auth.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.UserGrade;
@@ -22,7 +23,7 @@ public record UserProfileResponse(
 
         List<FoUserTermsResponse> terms
 ) {
-    
+
     public static UserProfileResponse of(FoUser user, List<FoUserTerms> terms) {
         return new UserProfileResponse(user.getId(), user.getEmail(), user.getNickname(), user.getPhone(),
                 user.getProfileImageUrl(), user.getGrade(), terms.stream().map(FoUserTermsResponse::of).toList());
