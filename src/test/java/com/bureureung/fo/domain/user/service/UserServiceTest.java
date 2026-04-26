@@ -252,4 +252,18 @@ class UserServiceTest {
         assertThat(termsMap.get(TermsType.MARKETING)).isFalse();
         assertThat(termsMap.get(TermsType.NIGHT_MARKETING)).isFalse();
     }
+
+    @Test
+    void 존재하지_않는_회원_번호로_조회한다() {
+        //given
+        Long userId = 1L;
+        given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+        //when & then
+        assertThatThrownBy(() -> userService.getProfile(userId))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+    }
+
+
 }
