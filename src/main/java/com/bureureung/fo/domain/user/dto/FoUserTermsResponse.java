@@ -1,4 +1,4 @@
-package com.bureureung.fo.domain.auth.dto;
+package com.bureureung.fo.domain.user.dto;
 
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.TermsType;

@@ -1,7 +1,6 @@
 package com.bureureung.fo.domain.user.dto;
 
 
-import com.bureureung.fo.domain.auth.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.UserGrade;
