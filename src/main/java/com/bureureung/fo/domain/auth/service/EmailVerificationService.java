@@ -5,8 +5,8 @@ import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
-import com.bureureung.fo.global.mail.MailContent;
 import com.bureureung.fo.global.mail.EmailSender;
+import com.bureureung.fo.global.mail.MailContent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -49,5 +49,11 @@ public class EmailVerificationService {
         verification.verify();
         verification.extendTtl();
         emailVerificationRepository.save(verification);
+    }
+
+    public void assertVerified(String email) {
+        emailVerificationRepository.findById(email)
+                .filter(EmailVerification::isVerified)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_VERIFIED));
     }
 }

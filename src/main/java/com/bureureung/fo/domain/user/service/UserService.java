@@ -4,6 +4,7 @@ import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.entity.PasswordVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
+import com.bureureung.fo.domain.auth.service.EmailVerificationService;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileResponse;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailVerificationRepository emailVerificationRepository;
+    private final EmailVerificationService emailVerificationService;
     private final UserTermsRepository userTermsRepository;
     private final PasswordVerificationRepository passwordVerificationRepository;
     private final UserTermsHistoryRepository userTermsHistoryRepository;
@@ -39,13 +41,11 @@ public class UserService {
     public UserResponse register(RegisterRequest request) {
 
         TermsType.validateRequired(request.termsMap());
+        emailVerificationService.assertVerified(request.email());
+        validateDuplication(request.email(), request.nickname());
 
-        validateRegister(request);
-
-        String encodedPassword = passwordEncoder.encode(request.password());
-        FoUser savedUser = userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
-
-        userTermsRepository.saveAll(FoUserTerms.of(savedUser.getId(), request.termsMap()));
+        FoUser savedUser = createUser(request);
+        saveUserTerms(savedUser.getId(), request.termsMap());
 
         return UserResponse.from(savedUser);
     }
@@ -91,21 +91,23 @@ public class UserService {
         return response;
     }
 
-    private void validateRegister(RegisterRequest request) {
-        EmailVerification verification = emailVerificationRepository.findById(request.email())
-                .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_VERIFIED));
-
-        if (!verification.isVerified()) {
-            throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
-        }
-
-        if (userRepository.existsByEmail(request.email())) {
+    private void validateDuplication(String email, String nickname) {
+        if (userRepository.existsByEmail(email)) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        if (userRepository.existsByNickname(request.nickname())) {
+        if (userRepository.existsByNickname(nickname)) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
+    }
+
+    private void saveUserTerms(Long userId, Map<TermsType, Boolean> termsMap) {
+        userTermsRepository.saveAll(FoUserTerms.of(userId, termsMap));
+    }
+
+    private FoUser createUser(RegisterRequest request) {
+        String encodedPassword = passwordEncoder.encode(request.password());
+        return userRepository.save(FoUser.of(request.email(), encodedPassword, request.nickname(), request.phone()));
     }
 
 }
