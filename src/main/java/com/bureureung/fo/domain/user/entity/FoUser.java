@@ -1,6 +1,5 @@
 package com.bureureung.fo.domain.user.entity;
 
-import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
