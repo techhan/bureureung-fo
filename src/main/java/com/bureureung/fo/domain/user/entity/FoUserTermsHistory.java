@@ -1,7 +1,9 @@
 package com.bureureung.fo.domain.user.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Table(name = "fo_user_terms_history")
 @EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FoUserTermsHistory {
 
     @Id
@@ -36,7 +39,7 @@ public class FoUserTermsHistory {
         this.termsType = termsType;
         this.isAgreed = isAgreed;
     }
-    
+
     public static FoUserTermsHistory of(Long userId, TermsType termsType, boolean isAgreed) {
         return new FoUserTermsHistory(userId, termsType, isAgreed);
     }
