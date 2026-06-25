@@ -1,6 +1,7 @@
 package com.bureureung.fo.domain.user.repository;
 
 import com.bureureung.fo.domain.user.entity.FoUser;
+import com.bureureung.fo.support.RepositoryTestSupport;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +13,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 
-
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class UserRepositoryTest {
+class UserRepositoryTest extends RepositoryTestSupport {
 
     @Autowired
     private UserRepository userRepository;

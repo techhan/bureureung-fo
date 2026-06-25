@@ -1,5 +1,6 @@
 package com.bureureung.fo.domain.user.service;
 
+import com.bureureung.fo.domain.auth.service.EmailVerificationService;
 import com.bureureung.fo.domain.user.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.entity.PasswordVerification;
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -46,10 +48,7 @@ class UserServiceTest {
 
     @Mock
     PasswordEncoder passwordEncoder;
-
-    @Mock
-    EmailVerificationRepository emailVerificationRepository;
-
+    
     @Mock
     UserTermsRepository userTermsRepository;
 
@@ -61,6 +60,9 @@ class UserServiceTest {
 
     @InjectMocks
     UserService userService;
+
+    @Mock
+    EmailVerificationService emailVerificationService;
 
     @Test
     void 회원가입을_한다() {
@@ -76,7 +78,6 @@ class UserServiceTest {
         // 이메일 인증
         EmailVerification verification = EmailVerification.issue(email);
         verification.verify(); // 인증 완료 상태로 만들기
-        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
 
         given(userRepository.save(any(FoUser.class)))
                 .willAnswer(invocation -> invocation.getArgument(0)); //받은 그대로 반환
@@ -133,7 +134,7 @@ class UserServiceTest {
         verification.verify();
 
         given(userRepository.existsByEmail(email)).willReturn(true);
-        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
+        //given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
 
         // when & then
         assertThatThrownBy(() -> {
@@ -156,7 +157,6 @@ class UserServiceTest {
 
         given(userRepository.existsByEmail(email)).willReturn(false);
         given(userRepository.existsByNickname(nickname)).willReturn(true);
-        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
 
         // when & then
         assertThatThrownBy(() -> {
@@ -172,10 +172,8 @@ class UserServiceTest {
         var request = RegisterRequestFixture.create();
         String email = request.email();
 
-        EmailVerification verification = EmailVerification.issue(email);
-        // verify() 호출 안 함 -> 미인증 상태
-
-        given(emailVerificationRepository.findById(email)).willReturn(Optional.of(verification));
+        willThrow(new CustomException(ErrorCode.EMAIL_NOT_VERIFIED))
+                .given(emailVerificationService).assertVerified(email);
 
         // when & then
         assertThatThrownBy(() -> userService.register(request))

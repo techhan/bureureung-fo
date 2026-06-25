@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+
+jwt:
+  secret: dGVzdGp3dHNlY3JldGtleWZvcmludGVncmF0aW9udGVzdGRvbm90dXNlaW5wcm9kdWN0aW9ubXVzdGJlbG9uZ2Vub3VnaA==
+  access-expiration: 3600000
+  refresh-expiration: 1209600000
+
+email:
+  verification:
+    code-length: 6
+    expiration-minutes: 5
+    subject: "[Bureureung-Test] 이메일 인증 코드"
