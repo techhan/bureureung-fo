@@ -32,6 +32,10 @@ public class FoUserTerms extends BaseEntity {
     @Column(nullable = false)
     private boolean isAgreed;
 
+    public void updateIsAgreed(boolean isAgreed) {
+        this.isAgreed = isAgreed;
+    }
+
     public static FoUserTerms of(Long foUserId, TermsType termsType, boolean isAgreed) {
         FoUserTerms foUserTerms = new FoUserTerms();
         foUserTerms.foUserId = foUserId;

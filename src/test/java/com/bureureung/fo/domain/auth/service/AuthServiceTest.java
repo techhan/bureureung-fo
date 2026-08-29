@@ -2,7 +2,10 @@ package com.bureureung.fo.domain.auth.service;
 
 import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
+import com.bureureung.fo.domain.auth.dto.VerifyPasswordRequest;
+import com.bureureung.fo.domain.auth.entity.PasswordVerification;
 import com.bureureung.fo.domain.auth.entity.RefreshToken;
+import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
 import com.bureureung.fo.domain.auth.repository.RefreshTokenRepository;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.repository.UserRepository;
@@ -18,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -37,6 +41,9 @@ class AuthServiceTest {
 
     @Mock
     RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    PasswordVerificationRepository passwordVerificationRepository;
 
     @Mock
     JwtProvider jwtProvider;
@@ -196,5 +203,46 @@ class AuthServiceTest {
         verify(refreshTokenRepository).deleteById(userId);
     }
 
+    @Test
+    void 비밀번호_인증을_성공한다() {
+        // given
+        Long userId = 1L;
+        String inputPassword = "abc12345!!";
+        VerifyPasswordRequest request = new VerifyPasswordRequest(inputPassword);
 
+        FoUser user = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(inputPassword, user.getPassword())).willReturn(true);
+
+        // when
+        String verifyToken = authService.verifyPassword(userId, request);
+
+        // then
+        assertThat(verifyToken).isNotNull();
+        verify(passwordVerificationRepository).save(any(PasswordVerification.class));
+    }
+
+    @Test
+    void 비밀번호_인증을_실패한다() {
+        // given
+        Long userId = 1L;
+        String inputPassword = "abc123!";
+        VerifyPasswordRequest request = new VerifyPasswordRequest(inputPassword);
+
+        FoUser user = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(false);
+
+        // when
+        assertThatThrownBy(() -> authService.verifyPassword(userId, request))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PASSWORD);
+
+        // then
+        verify(passwordVerificationRepository, never()).save(any());
+    }
 }

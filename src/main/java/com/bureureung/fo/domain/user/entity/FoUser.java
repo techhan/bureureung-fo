@@ -44,6 +44,16 @@ public class FoUser extends BaseEntity {
     @Column
     private LocalDateTime deletedAt;
 
+    public void withdraw() {
+        this.deletedAt = LocalDateTime.now();
+        this.status = UserStatus.DELETED;
+    }
+
+    public void update(String nickname, String phone) {
+        this.nickname = nickname;
+        this.phone = phone;
+    }
+
     public static FoUser of(String email, String password, String nickname, String phone) {
         FoUser user = new FoUser();
         user.email = email;
@@ -53,10 +63,5 @@ public class FoUser extends BaseEntity {
         user.grade = UserGrade.BRONZE;
         user.status = UserStatus.ACTIVE;
         return user;
-    }
-
-    public void withdraw() {
-        this.deletedAt = LocalDateTime.now();
-        this.status = UserStatus.DELETED;
     }
 }

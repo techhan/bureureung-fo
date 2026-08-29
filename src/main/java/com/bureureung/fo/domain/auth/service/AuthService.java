@@ -2,7 +2,10 @@ package com.bureureung.fo.domain.auth.service;
 
 import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
+import com.bureureung.fo.domain.auth.dto.VerifyPasswordRequest;
+import com.bureureung.fo.domain.auth.entity.PasswordVerification;
 import com.bureureung.fo.domain.auth.entity.RefreshToken;
+import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
 import com.bureureung.fo.domain.auth.repository.RefreshTokenRepository;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.UserStatus;
@@ -14,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -22,6 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordVerificationRepository passwordVerificationRepository;
 
     public LoginResponse login(LoginRequest loginRequest) {
         FoUser findUser = userRepository.findByEmail(loginRequest.email())
@@ -65,5 +71,17 @@ public class AuthService {
 
     public void logout(Long userId) {
         refreshTokenRepository.deleteById(userId);
+    }
+
+    public String verifyPassword(Long userId, VerifyPasswordRequest request) {
+        FoUser findUser = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.password(), findUser.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        String token = UUID.randomUUID().toString();
+        passwordVerificationRepository.save(PasswordVerification.of(userId, token));
+        return token;
     }
 }
