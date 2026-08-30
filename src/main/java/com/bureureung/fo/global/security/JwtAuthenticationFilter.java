@@ -1,6 +1,8 @@
 package com.bureureung.fo.global.security;
 
+import com.bureureung.fo.global.common.ApiResponse;
 import com.bureureung.fo.global.exception.CustomException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +20,8 @@ import java.util.Collections;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private final JwtProvider jwtProvider;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -43,8 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (CustomException e) {
             response.setStatus(e.getErrorCode().getHttpStatus().value());
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"success\":false,\"code\":\"" + e.getErrorCode().getCode()
-                    + "\",\"message\":\"" + e.getErrorCode().getMessage() + "\"}");
+            response.getWriter().write(
+                objectMapper.writeValueAsString(ApiResponse.failBody(e.getErrorCode()))
+            );
             return;
         }
 

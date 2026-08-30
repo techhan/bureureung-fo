@@ -7,6 +7,8 @@ import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import com.bureureung.fo.global.security.JwtAccessDeniedHandler;
+import com.bureureung.fo.global.security.JwtAuthenticationEntryPoint;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,6 +47,12 @@ class AuthControllerTest {
 
     @MockitoBean
     JwtProvider jwtProvider;
+
+    @MockitoBean
+    JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockitoBean
+    JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     final String LOGIN_URL = "/api/v1/auth/login";
 

@@ -12,6 +12,8 @@ import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import com.bureureung.fo.global.security.JwtAccessDeniedHandler;
+import com.bureureung.fo.global.security.JwtAuthenticationEntryPoint;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class, JwtAccessDeniedHandler.class})
 class UserControllerTest {
 
     @Autowired
@@ -213,10 +215,9 @@ class UserControllerTest {
     }
 
     @Test
-    void 본인_정보_조회_시_토큰이_없는_경우_403을_반환한다() throws Exception {
-        // TODO 추후 403 > 401 에러로 변경 예정
+    void 본인_정보_조회_시_토큰이_없는_경우_401을_반환한다() throws Exception {
         mockMvc.perform(get("/api/v1/users/me"))
-            .andExpect(status().isForbidden())
+            .andExpect(status().isUnauthorized())
             .andDo(print());
     }
 
