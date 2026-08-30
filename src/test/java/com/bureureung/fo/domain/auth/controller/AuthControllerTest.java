@@ -2,12 +2,14 @@ package com.bureureung.fo.domain.auth.controller;
 
 import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
+import com.bureureung.fo.domain.auth.dto.VerifyPasswordRequest;
 import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -139,5 +142,26 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         verify(authService).logout(userId);
+    }
+
+    @Test
+    void 비밀번호_확인에_성공하면_인증토큰을_발급한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        String password = "test1234!";
+        var verifyPasswordRequest = new VerifyPasswordRequest(password);
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+        given(authService.verifyPassword(eq(userId),any(VerifyPasswordRequest.class))).willReturn(token);
+
+        mockMvc.perform(post("/api/v1/auth/password-verify")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(verifyPasswordRequest)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data").value(token))
+            .andDo(print());
+
+
     }
 }

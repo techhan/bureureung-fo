@@ -3,6 +3,7 @@ package com.bureureung.fo.domain.auth.controller;
 import com.bureureung.fo.domain.auth.dto.LoginRequest;
 import com.bureureung.fo.domain.auth.dto.LoginResponse;
 import com.bureureung.fo.domain.auth.dto.RefreshRequest;
+import com.bureureung.fo.domain.auth.dto.VerifyPasswordRequest;
 import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -36,5 +37,14 @@ public class AuthController {
         authService.logout(userId);
         return ApiResponse.success();
     }
+
+    @PostMapping("/password-verify")
+    public ResponseEntity<ApiResponse<String>> passwordVerify(@RequestBody @Valid VerifyPasswordRequest request,
+        @AuthenticationPrincipal Long userId) {
+        String token = authService.verifyPassword(userId, request);
+        return ApiResponse.success(token);
+    }
+
+
 
 }

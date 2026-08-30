@@ -1,7 +1,9 @@
 package com.bureureung.fo.domain.user.controller;
 
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
+import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.user.entity.UserGrade;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
@@ -18,8 +20,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -182,4 +186,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.code").value(ErrorCode.EMAIL_NOT_VERIFIED.getCode()))
                 .andDo(print());
     }
+
+    @Test
+    void 본인_정보를_조회한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+        given(userService.getProfile(userId)).willReturn(new UserProfileResponse(
+            userId, "test@email.com", "nick", "01012341234", null, UserGrade.BRONZE, null
+        ));
+
+        mockMvc.perform(get("/api/v1/users/me")
+            .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(userId))
+            .andDo(print());
+    }
+
+
 }
