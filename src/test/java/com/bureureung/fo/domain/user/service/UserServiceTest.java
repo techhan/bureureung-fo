@@ -301,7 +301,7 @@ class UserServiceTest {
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        UserProfileRequest request = UserProfileRequest.of(token, "닉네임수정", "01011111111", newTerms);
+        UserProfileRequest request = new UserProfileRequest(token, "닉네임수정", "01011111111", newTerms);
 
         // when
         UserProfileResponse response = userService.updateProfile(userId, request);
@@ -337,7 +337,7 @@ class UserServiceTest {
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
         // when
@@ -362,7 +362,7 @@ class UserServiceTest {
                 TermsType.PRIVACY, true,
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
 
@@ -393,7 +393,7 @@ class UserServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
 
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
         // when

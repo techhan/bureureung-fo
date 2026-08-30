@@ -23,7 +23,5 @@ public record UserProfileRequest(
         @NotNull(message = "약관 동의는 필수입니다.")
         Map<TermsType, Boolean> termsMap
 ) {
-    public static UserProfileRequest of(String token, String nickname, String phone, Map<TermsType, Boolean> termsMap) {
-        return new UserProfileRequest(token, nickname, phone, termsMap);
-    }
+
 }
