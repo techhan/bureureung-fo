@@ -32,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authorization.substring(7);
 
         try {
+            jwtProvider.validateAccessToken(token);
             long userId = jwtProvider.validateAndGetUserId(token);
             
             UsernamePasswordAuthenticationToken authentication =

@@ -13,6 +13,7 @@ import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
+import com.bureureung.fo.global.security.TokenType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class AuthService {
     }
 
     public LoginResponse refresh(String oldRefreshToken) {
+        jwtProvider.validateRefreshToken(oldRefreshToken);
 
         long userId = jwtProvider.validateAndGetUserId(oldRefreshToken);
 

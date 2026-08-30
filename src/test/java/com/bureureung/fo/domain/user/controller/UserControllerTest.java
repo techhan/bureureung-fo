@@ -213,6 +213,14 @@ class UserControllerTest {
     }
 
     @Test
+    void 본인_정보_조회_시_토큰이_없는_경우_403을_반환한다() throws Exception {
+        // TODO 추후 403 > 401 에러로 변경 예정
+        mockMvc.perform(get("/api/v1/users/me"))
+            .andExpect(status().isForbidden())
+            .andDo(print());
+    }
+
+    @Test
     void 본인_정보를_업데이트한다() throws Exception {
         String token = "access-token";
         Long userId = 1L;
@@ -229,6 +237,24 @@ class UserControllerTest {
             .content(objectMapper.writeValueAsString(profile)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(userId))
+            .andDo(print());
+    }
+
+    @Test
+    void 본인_정보_수정_시_파라미터_유효성_검사를_실패하면_400이_반환된다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        var profile = new UserProfileRequest(token, "n", "12",
+            Map.of());
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(patch("/api/v1/users/me")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(objectMapper.writeValueAsString(profile)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("COMMON_E001"))
             .andDo(print());
     }
 }

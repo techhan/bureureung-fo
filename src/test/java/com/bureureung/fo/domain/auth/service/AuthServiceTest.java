@@ -12,6 +12,7 @@ import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
+import com.bureureung.fo.global.security.TokenType;
 import org.aspectj.util.Reflection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -133,7 +135,6 @@ class AuthServiceTest {
 
     @Test
     void 토큰_재발급을_성공한다() {
-
         // token
         String oldRefreshToken = "old-refresh-token";
         Long userId = 1L;
@@ -155,11 +156,10 @@ class AuthServiceTest {
         assertThat(response.accessToken()).isEqualTo("new-access-token");
         assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
         verify(refreshTokenRepository).save(any(RefreshToken.class));
-
     }
 
     @Test
-    void Redis에_없는_토큰이면_쟈발급에_실패한다() {
+    void Redis에_없는_토큰이면_재발급에_실패한다() {
         //given
         String refreshToken = "unkown-refresh-token";
         Long userId = 1L;
@@ -189,6 +189,20 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.refresh(stolenToken))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void refresh_토큰_발급_시_TokenType이_REFHRESH가_아닌_경우_에러가_발생한다() {
+        String token = "access-token";
+
+        willThrow(new CustomException(ErrorCode.INVALID_TOKEN))
+            .given(jwtProvider).validateRefreshToken(token);
+
+        assertThatThrownBy(() -> authService.refresh(token))
+            .isInstanceOf(CustomException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
 
         verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
     }

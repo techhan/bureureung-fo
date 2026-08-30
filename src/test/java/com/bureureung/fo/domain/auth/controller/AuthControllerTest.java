@@ -161,7 +161,21 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data").value(token))
             .andDo(print());
+    }
 
+    @Test
+    void 비밀번호_확인_시_비밀번호가_없으면_400을_반환한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
 
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/auth/password-verify")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(new VerifyPasswordRequest(null))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("COMMON_E001"))
+            .andDo(print());
     }
 }
