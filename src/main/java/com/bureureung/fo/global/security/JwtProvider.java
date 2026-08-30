@@ -16,7 +16,6 @@ import java.util.Date;
 
 @Component
 public class JwtProvider {
-
     private final long accessExpiration;
     private final long refreshExpiration;
     private final SecretKey secretKey;

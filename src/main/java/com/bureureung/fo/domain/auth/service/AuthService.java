@@ -72,7 +72,7 @@ public class AuthService {
     }
 
     public void logout(Long userId) {
-        refreshTokenRepository.deleteById(userId);
+        deleteRefreshToken(userId);
     }
 
     public String verifyPassword(Long userId, VerifyPasswordRequest request) {
@@ -85,5 +85,9 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         passwordVerificationRepository.save(PasswordVerification.of(userId, token));
         return token;
+    }
+
+    public void deleteRefreshToken(Long userId) {
+        refreshTokenRepository.deleteById(userId);
     }
 }

@@ -28,6 +28,7 @@ public enum ErrorCode {
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_E003", "이미 사용 중인 닉네임입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "USER_E004", "비밀번호가 올바르지 않습니다."),
     REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "USER_E005", "필수 약관에 동의해야 합니다."),
+    ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "USER_E006", "이미 탈퇴한 회원입니다."),
 
     // ------ 이메일 (email) ------
     EMAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY, "MAIL_E001", "메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요."),

@@ -4,20 +4,27 @@ import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.entity.PasswordVerification;
 import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
+import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.domain.auth.service.EmailVerificationService;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.user.dto.WithdrawRequest;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.FoUserTermsHistory;
 import com.bureureung.fo.domain.user.entity.TermsType;
+import com.bureureung.fo.domain.user.entity.UserStatus;
+import com.bureureung.fo.domain.user.entity.WithdrawReason;
+import com.bureureung.fo.domain.user.entity.WithdrawalHistory;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.domain.user.repository.UserTermsHistoryRepository;
 import com.bureureung.fo.domain.user.repository.UserTermsRepository;
+import com.bureureung.fo.domain.user.repository.WithdrawalHistoryRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import com.bureureung.fo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,10 +43,11 @@ public class UserService {
     private final UserTermsRepository userTermsRepository;
     private final PasswordVerificationRepository passwordVerificationRepository;
     private final UserTermsHistoryRepository userTermsHistoryRepository;
+    private final AuthService authService;
+    private final WithdrawalHistoryRepository withdrawalHistoryRepository;
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
-
         TermsType.validateRequired(request.termsMap());
         emailVerificationService.assertVerified(request.email());
         validateDuplication(request.email(), request.nickname());
@@ -52,8 +60,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserProfileResponse getProfile(Long userId) {
-        FoUser findUser = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        FoUser findUser = userRepository.getByIdOrThrow(userId);
 
         List<FoUserTerms> termsList = userTermsRepository.findByFoUserId(userId);
 
@@ -62,8 +69,7 @@ public class UserService {
 
     @Transactional
     public UserProfileResponse updateProfile(Long userId, UserProfileRequest request) {
-        FoUser findUser = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        FoUser findUser = userRepository.getByIdOrThrow(userId);
 
         PasswordVerification passwordVerification = passwordVerificationRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
@@ -89,6 +95,17 @@ public class UserService {
         passwordVerificationRepository.deleteById(userId);
 
         return response;
+    }
+
+    @Transactional
+    public void withdraw(Long userId, WithdrawRequest request) {
+        FoUser findUser = userRepository.getByIdOrThrow(userId);
+
+        findUser.withdraw();
+        WithdrawalHistory withdrawalHistory = WithdrawalHistory.of(userId, request.reason(), request.detail());
+
+        withdrawalHistoryRepository.save(withdrawalHistory);
+        authService.deleteRefreshToken(userId);
     }
 
     private void validateDuplication(String email, String nickname) {
