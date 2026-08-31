@@ -5,9 +5,11 @@ import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.user.dto.WithdrawRequest;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.TermsType;
 import com.bureureung.fo.domain.user.entity.UserGrade;
+import com.bureureung.fo.domain.user.entity.WithdrawReason;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
@@ -16,6 +18,7 @@ import com.bureureung.fo.global.security.JwtAccessDeniedHandler;
 import com.bureureung.fo.global.security.JwtAuthenticationEntryPoint;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
@@ -257,5 +260,59 @@ class UserControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("COMMON_E001"))
             .andDo(print());
+    }
+
+    @Test
+    void 회원_탈퇴를_성공한다() throws Exception {
+        Long userId = 1L;
+        String token = "access-token";
+
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.APP_ERROR, null);
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andDo(print());
+
+        verify(userService).withdraw(eq(userId), any(WithdrawRequest.class));
+    }
+
+    @Test
+    void 탈퇴_사유가_없으면_에러가_발생한다() throws Exception{
+        String token = "access-token";
+        Long userId = 1L;
+        WithdrawRequest request = new WithdrawRequest(null, null);
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(userService, never()).withdraw(eq(userId), any(WithdrawRequest.class));
+    }
+
+    @Test
+    void 탈퇴_사유가_OTHER일때_상세사유가_없으면_에러가_발생한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.OTHER, "");
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(print());
+
+        verify(userService, never()).withdraw(eq(userId), any(WithdrawRequest.class));
     }
 }

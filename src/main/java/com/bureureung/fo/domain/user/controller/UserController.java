@@ -4,6 +4,7 @@ import com.bureureung.fo.domain.user.dto.RegisterRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.user.dto.WithdrawRequest;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.global.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -39,5 +40,12 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(@AuthenticationPrincipal Long userId,
         @RequestBody @Valid UserProfileRequest request) {
         return ApiResponse.success(userService.updateProfile(userId, request));
+    }
+
+    @PostMapping("/me/withdraw")
+    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal Long userId,
+        @RequestBody @Valid WithdrawRequest request) {
+        userService.withdraw(userId, request);
+        return ApiResponse.success();
     }
 }
