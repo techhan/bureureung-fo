@@ -13,6 +13,7 @@ import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
 import com.bureureung.fo.global.security.JwtProvider;
+import com.bureureung.fo.global.security.TokenType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class AuthService {
     }
 
     public LoginResponse refresh(String oldRefreshToken) {
+        jwtProvider.validateRefreshToken(oldRefreshToken);
 
         long userId = jwtProvider.validateAndGetUserId(oldRefreshToken);
 
@@ -70,7 +72,7 @@ public class AuthService {
     }
 
     public void logout(Long userId) {
-        refreshTokenRepository.deleteById(userId);
+        deleteRefreshToken(userId);
     }
 
     public String verifyPassword(Long userId, VerifyPasswordRequest request) {
@@ -83,5 +85,9 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         passwordVerificationRepository.save(PasswordVerification.of(userId, token));
         return token;
+    }
+
+    public void deleteRefreshToken(Long userId) {
+        refreshTokenRepository.deleteById(userId);
     }
 }

@@ -1,14 +1,27 @@
 package com.bureureung.fo.domain.user.controller;
 
+import com.bureureung.fo.domain.user.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.user.dto.RegisterRequest;
+import com.bureureung.fo.domain.user.dto.UserProfileRequest;
+import com.bureureung.fo.domain.user.dto.UserProfileResponse;
 import com.bureureung.fo.domain.user.dto.UserResponse;
+import com.bureureung.fo.domain.user.dto.WithdrawRequest;
+import com.bureureung.fo.domain.user.entity.FoUserTerms;
+import com.bureureung.fo.domain.user.entity.TermsType;
+import com.bureureung.fo.domain.user.entity.UserGrade;
+import com.bureureung.fo.domain.user.entity.WithdrawReason;
 import com.bureureung.fo.domain.user.service.UserService;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import com.bureureung.fo.global.security.JwtAccessDeniedHandler;
+import com.bureureung.fo.global.security.JwtAuthenticationEntryPoint;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,15 +31,18 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class, JwtAccessDeniedHandler.class})
 class UserControllerTest {
 
     @Autowired
@@ -181,5 +197,122 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.EMAIL_NOT_VERIFIED.getCode()))
                 .andDo(print());
+    }
+
+    @Test
+    void 본인_정보를_조회한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+        given(userService.getProfile(userId)).willReturn(new UserProfileResponse(
+            userId, "test@email.com", "nick", "01012341234", null, UserGrade.BRONZE, null
+        ));
+
+        mockMvc.perform(get("/api/v1/users/me")
+            .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(userId))
+            .andDo(print());
+    }
+
+    @Test
+    void 본인_정보_조회_시_토큰이_없는_경우_401을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me"))
+            .andExpect(status().isUnauthorized())
+            .andDo(print());
+    }
+
+    @Test
+    void 본인_정보를_업데이트한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        var profile = new UserProfileRequest(token, "testNick", "01012341234",
+            Map.of());
+        var returnProfile = new UserProfileResponse(userId, "test@email.com", profile.nickname(), profile.phone(), null, UserGrade.BRONZE, List.of());
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+        given(userService.updateProfile(eq(userId), any(UserProfileRequest.class))).willReturn(returnProfile);
+
+        mockMvc.perform(patch("/api/v1/users/me")
+                .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer " + token)
+            .content(objectMapper.writeValueAsString(profile)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(userId))
+            .andDo(print());
+    }
+
+    @Test
+    void 본인_정보_수정_시_파라미터_유효성_검사를_실패하면_400이_반환된다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        var profile = new UserProfileRequest(token, "n", "12",
+            Map.of());
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(patch("/api/v1/users/me")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(objectMapper.writeValueAsString(profile)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("COMMON_E001"))
+            .andDo(print());
+    }
+
+    @Test
+    void 회원_탈퇴를_성공한다() throws Exception {
+        Long userId = 1L;
+        String token = "access-token";
+
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.APP_ERROR, null);
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andDo(print());
+
+        verify(userService).withdraw(eq(userId), any(WithdrawRequest.class));
+    }
+
+    @Test
+    void 탈퇴_사유가_없으면_에러가_발생한다() throws Exception{
+        String token = "access-token";
+        Long userId = 1L;
+        WithdrawRequest request = new WithdrawRequest(null, null);
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(userService, never()).withdraw(eq(userId), any(WithdrawRequest.class));
+    }
+
+    @Test
+    void 탈퇴_사유가_OTHER일때_상세사유가_없으면_에러가_발생한다() throws Exception {
+        String token = "access-token";
+        Long userId = 1L;
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.OTHER, "");
+
+        given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
+
+        mockMvc.perform(post("/api/v1/users/me/withdraw")
+            .header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(print());
+
+        verify(userService, never()).withdraw(eq(userId), any(WithdrawRequest.class));
     }
 }

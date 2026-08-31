@@ -1,23 +1,29 @@
 package com.bureureung.fo.domain.user.service;
 
+import com.bureureung.fo.domain.auth.service.AuthService;
 import com.bureureung.fo.domain.auth.service.EmailVerificationService;
 import com.bureureung.fo.domain.user.dto.FoUserTermsResponse;
 import com.bureureung.fo.domain.auth.entity.EmailVerification;
 import com.bureureung.fo.domain.auth.entity.PasswordVerification;
-import com.bureureung.fo.domain.auth.repository.EmailVerificationRepository;
 import com.bureureung.fo.domain.auth.repository.PasswordVerificationRepository;
 import com.bureureung.fo.domain.user.dto.UserProfileRequest;
 import com.bureureung.fo.domain.user.dto.UserProfileResponse;
+import com.bureureung.fo.domain.user.dto.WithdrawRequest;
 import com.bureureung.fo.domain.user.entity.FoUser;
 import com.bureureung.fo.domain.user.entity.FoUserTerms;
 import com.bureureung.fo.domain.user.entity.FoUserTermsHistory;
 import com.bureureung.fo.domain.user.entity.TermsType;
+import com.bureureung.fo.domain.user.entity.UserStatus;
+import com.bureureung.fo.domain.user.entity.WithdrawReason;
+import com.bureureung.fo.domain.user.entity.WithdrawalHistory;
 import com.bureureung.fo.domain.user.repository.UserRepository;
 import com.bureureung.fo.domain.user.repository.UserTermsHistoryRepository;
 import com.bureureung.fo.domain.user.repository.UserTermsRepository;
+import com.bureureung.fo.domain.user.repository.WithdrawalHistoryRepository;
 import com.bureureung.fo.fixture.RegisterRequestFixture;
 import com.bureureung.fo.global.exception.CustomException;
 import com.bureureung.fo.global.exception.ErrorCode;
+import lombok.With;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,6 +70,12 @@ class UserServiceTest {
 
     @Mock
     EmailVerificationService emailVerificationService;
+
+    @Mock
+    AuthService authService;
+
+    @Mock
+    WithdrawalHistoryRepository withdrawalHistoryRepository;
 
     @Test
     void 회원가입을_한다() {
@@ -229,7 +242,7 @@ class UserServiceTest {
         FoUser user = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
         ReflectionTestUtils.setField(user, "id", userId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(user);
 
         List<FoUserTerms> terms = List.of(
                 FoUserTerms.of(userId, TermsType.TERMS, true),
@@ -266,7 +279,7 @@ class UserServiceTest {
     void 존재하지_않는_회원_번호로_조회한다() {
         //given
         Long userId = 1L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.getByIdOrThrow(userId)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
 
         //when & then
         assertThatThrownBy(() -> userService.getProfile(userId))
@@ -276,7 +289,6 @@ class UserServiceTest {
 
     @Test
     void 회원_정보를_수정한다() {
-
         // given
         Long userId = 1L;
         FoUser originUser
@@ -291,7 +303,7 @@ class UserServiceTest {
         String token = "verification-token";
         PasswordVerification passwordVerification = PasswordVerification.of(userId, token);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
         given(userTermsRepository.findByFoUserId(userId)).willReturn(originTerms);
 
@@ -301,7 +313,7 @@ class UserServiceTest {
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        UserProfileRequest request = UserProfileRequest.of(token, "닉네임수정", "01011111111", newTerms);
+        UserProfileRequest request = new UserProfileRequest(token, "닉네임수정", "01011111111", newTerms);
 
         // when
         UserProfileResponse response = userService.updateProfile(userId, request);
@@ -327,17 +339,16 @@ class UserServiceTest {
 
     @Test
     void 존재하지_않는_회원의_정보_수정에_실패한다() {
-
         //given
         Long userId = 1L;
-        given(userRepository.findById(1L)).willReturn(Optional.empty());
+        given(userRepository.getByIdOrThrow(1L)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
         Map<TermsType, Boolean> newTerms = Map.of(
                 TermsType.TERMS, true,
                 TermsType.PRIVACY, true,
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
         // when
@@ -352,7 +363,6 @@ class UserServiceTest {
 
     @Test
     void 회원_정보_수정_시_비밀번호_인증_토큰이_유효하지_않으면_예외가_발생한다() {
-
         // given
         Long userId = 1L;
         FoUser originUser
@@ -362,11 +372,10 @@ class UserServiceTest {
                 TermsType.PRIVACY, true,
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
-
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(PasswordVerification.of(userId, "invalid-token")));
 
         // when
@@ -390,10 +399,10 @@ class UserServiceTest {
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
 
-        UserProfileRequest request = UserProfileRequest.of("token", "닉네임수정", "01011111111",
+        UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
         // when
@@ -404,4 +413,58 @@ class UserServiceTest {
         verify(userTermsRepository, never()).findByFoUserId(any());
         verify(passwordVerificationRepository, never()).deleteById(any());
     }
+
+    @Test
+    void 회원_탈퇴를_성공한다() {
+        Long userId = 1L;
+        FoUser user
+            = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", userId);
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.DELIVERY_FEE, null);
+        given(userRepository.getByIdOrThrow(userId)).willReturn(user);
+
+        userService.withdraw(userId, request);
+
+        assertThat(user.getStatus()).isEqualTo(UserStatus.DELETED);
+        ArgumentCaptor<WithdrawalHistory> captor = ArgumentCaptor.forClass(WithdrawalHistory.class);
+        verify(withdrawalHistoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getReason()).isEqualTo(WithdrawReason.DELIVERY_FEE);
+
+        verify(authService).deleteRefreshToken(userId);
+    }
+
+    @Test
+    void 탈퇴한_회원이_탈퇴를_재시도하면_예외가_발생한다() {
+        Long userId = 1L;
+        FoUser user
+            = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+        ReflectionTestUtils.setField(user, "id", userId);
+        ReflectionTestUtils.setField(user, "status", UserStatus.DELETED);
+
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.APP_ERROR, null);
+        given(userRepository.getByIdOrThrow(userId)).willReturn(user);
+
+        assertThatThrownBy(() -> userService.withdraw(userId, request))
+            .isInstanceOf(CustomException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ALREADY_WITHDRAWN);
+
+        verify(withdrawalHistoryRepository,never()).save(any());
+        verify(authService, never()).deleteRefreshToken(any());
+    }
+
+    @Test
+    void 존재하지_않는_회원이_탈퇴를_시도하면_예외가_발생한다() {
+        Long userId = 1L;
+        WithdrawRequest request = new WithdrawRequest(WithdrawReason.APP_ERROR, null);
+
+        given(userRepository.getByIdOrThrow(userId)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        assertThatThrownBy(() -> userService.withdraw(userId, request))
+            .isInstanceOf(CustomException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+
+        verify(withdrawalHistoryRepository,never()).save(any());
+        verify(authService, never()).deleteRefreshToken(any());
+    }
+
 }

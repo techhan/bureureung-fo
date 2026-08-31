@@ -1,5 +1,6 @@
 package com.bureureung.fo.global.common;
 
+import com.bureureung.fo.global.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -67,6 +68,13 @@ public class ApiResponse<T> {
             HttpStatus status, String code, String message, Map<String, String> errors) {
         return ResponseEntity.status(status)
                 .body(new ApiResponse<>(false, code, message, null, errors));
+    }
+
+    /**
+     * ResponseEntity 제외한 실패 응답
+     */
+    public static ApiResponse<Void> failBody(ErrorCode errorCode) {
+        return new ApiResponse<>(false, errorCode.getCode(), errorCode.getMessage(), null, null);
     }
 
 }

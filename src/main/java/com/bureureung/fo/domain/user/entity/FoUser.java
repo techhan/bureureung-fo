@@ -1,6 +1,9 @@
 package com.bureureung.fo.domain.user.entity;
 
 import com.bureureung.fo.global.common.BaseEntity;
+import com.bureureung.fo.global.exception.CustomException;
+import com.bureureung.fo.global.exception.ErrorCode;
+import io.jsonwebtoken.lang.Assert;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,7 +16,6 @@ import java.time.LocalDateTime;
 @Table(name = "fo_user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FoUser extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -45,6 +47,8 @@ public class FoUser extends BaseEntity {
     private LocalDateTime deletedAt;
 
     public void withdraw() {
+        validateWithdrawable();
+
         this.deletedAt = LocalDateTime.now();
         this.status = UserStatus.DELETED;
     }
@@ -63,5 +67,11 @@ public class FoUser extends BaseEntity {
         user.grade = UserGrade.BRONZE;
         user.status = UserStatus.ACTIVE;
         return user;
+    }
+
+    private void validateWithdrawable() {
+        if (status != UserStatus.ACTIVE) {
+            throw new CustomException(ErrorCode.ALREADY_WITHDRAWN);
+        }
     }
 }

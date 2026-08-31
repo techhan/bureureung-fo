@@ -3,6 +3,8 @@ package com.bureureung.fo.domain.auth.controller;
 import com.bureureung.fo.domain.auth.dto.EmailSendRequest;
 import com.bureureung.fo.domain.auth.dto.EmailVerifyRequest;
 import com.bureureung.fo.domain.auth.service.EmailVerificationService;
+import com.bureureung.fo.global.security.JwtAccessDeniedHandler;
+import com.bureureung.fo.global.security.JwtAuthenticationEntryPoint;
 import com.bureureung.fo.global.security.JwtProvider;
 import com.bureureung.fo.global.security.SecurityConfig;
 import com.bureureung.fo.global.exception.CustomException;
@@ -41,6 +43,12 @@ class EmailVerificationControllerTest {
 
     @MockitoBean
     private EmailVerificationService emailVerificationService;
+
+    @MockitoBean
+    JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockitoBean
+    JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     private String AVAILABLE_EMAIL = "test@test.com";
 
