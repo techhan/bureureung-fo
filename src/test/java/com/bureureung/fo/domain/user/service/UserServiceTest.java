@@ -242,7 +242,7 @@ class UserServiceTest {
         FoUser user = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
         ReflectionTestUtils.setField(user, "id", userId);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(user);
 
         List<FoUserTerms> terms = List.of(
                 FoUserTerms.of(userId, TermsType.TERMS, true),
@@ -279,7 +279,7 @@ class UserServiceTest {
     void 존재하지_않는_회원_번호로_조회한다() {
         //given
         Long userId = 1L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.getByIdOrThrow(userId)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
 
         //when & then
         assertThatThrownBy(() -> userService.getProfile(userId))
@@ -303,7 +303,7 @@ class UserServiceTest {
         String token = "verification-token";
         PasswordVerification passwordVerification = PasswordVerification.of(userId, token);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
         given(userTermsRepository.findByFoUserId(userId)).willReturn(originTerms);
 
@@ -339,10 +339,9 @@ class UserServiceTest {
 
     @Test
     void 존재하지_않는_회원의_정보_수정에_실패한다() {
-
         //given
         Long userId = 1L;
-        given(userRepository.findById(1L)).willReturn(Optional.empty());
+        given(userRepository.getByIdOrThrow(1L)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
         Map<TermsType, Boolean> newTerms = Map.of(
                 TermsType.TERMS, true,
                 TermsType.PRIVACY, true,
@@ -364,7 +363,6 @@ class UserServiceTest {
 
     @Test
     void 회원_정보_수정_시_비밀번호_인증_토큰이_유효하지_않으면_예외가_발생한다() {
-
         // given
         Long userId = 1L;
         FoUser originUser
@@ -377,8 +375,7 @@ class UserServiceTest {
         UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
 
-
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(PasswordVerification.of(userId, "invalid-token")));
 
         // when
@@ -402,7 +399,7 @@ class UserServiceTest {
                 TermsType.MARKETING, true,
                 TermsType.NIGHT_MARKETING, false);
 
-        given(userRepository.findById(userId)).willReturn(Optional.of(originUser));
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
         given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
 
         UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
