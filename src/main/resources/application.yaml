@@ -1,10 +1,6 @@
 spring:
   application:
     name: fo
-
-  profiles:
-    active: local # 기본 프로파일 활성화
-
   jpa:
     hibernate:
       ddl-auto: validate
@@ -59,3 +55,4 @@ email:
     code-length: 6 # 인증 코드 자리수
     expiration-minutes: 5 # 만료 시간(분)
     subject: "[Bureureung] 이메일 인증 코드 안내"
+
