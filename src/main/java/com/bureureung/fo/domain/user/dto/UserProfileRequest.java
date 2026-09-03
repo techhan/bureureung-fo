@@ -1,6 +1,7 @@
 package com.bureureung.fo.domain.user.dto;
 
 import com.bureureung.fo.domain.user.entity.TermsType;
+import com.bureureung.fo.global.util.MaskingUtil;
 import jakarta.validation.constraints.*;
 
 import java.util.Map;
@@ -23,5 +24,12 @@ public record UserProfileRequest(
         @NotNull(message = "약관 동의는 필수입니다.")
         Map<TermsType, Boolean> termsMap
 ) {
+        @Override
+        public String toString() {
+                return "UserProfileRequest[token" + MaskingUtil.mask()
+                    + "nickname" + nickname
+                    + "phone" + MaskingUtil.maskPhone(phone)
+                    + "termsMap" + termsMap + "]";
+        }
 
 }

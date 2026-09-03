@@ -1,5 +1,6 @@
 package com.bureureung.fo.domain.auth.dto;
 
+import com.bureureung.fo.global.util.MaskingUtil;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,4 +13,10 @@ public record EmailVerifyRequest(
         @NotBlank(message = "인증 코드는 필수입니다.")
         @Size(min = 6, max = 6)
         String code) {
+
+        @Override
+        public String toString() {
+                return "EmailVerifyRequest[email=" + MaskingUtil.maskEmail(email)
+                                        + ", code=" + MaskingUtil.mask() +"]";
+        }
 }

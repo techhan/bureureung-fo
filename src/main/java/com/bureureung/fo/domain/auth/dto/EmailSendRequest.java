@@ -1,5 +1,6 @@
 package com.bureureung.fo.domain.auth.dto;
 
+import com.bureureung.fo.global.util.MaskingUtil;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -7,4 +8,9 @@ public record EmailSendRequest(
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         String email) {
+
+        @Override
+        public String toString() {
+                return "EmailSendRequest[email=" + MaskingUtil.maskEmail(email) + "]";
+        }
 }

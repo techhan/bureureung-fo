@@ -2,6 +2,7 @@ package com.bureureung.fo.domain.user.dto;
 
 import com.bureureung.fo.domain.user.entity.TermsType;
 import com.bureureung.fo.domain.user.validation.PasswordMatch;
+import com.bureureung.fo.global.util.MaskingUtil;
 import jakarta.validation.constraints.*;
 
 import java.util.Map;
@@ -44,4 +45,14 @@ public record RegisterRequest(
 
         @NotNull(message = "약관 동의는 필수입니다.")
         Map<TermsType, Boolean> termsMap) {
+
+        @Override
+        public String toString() {
+                return "RegisterRequest[email=" + MaskingUtil.maskEmail(email)
+                    + ", password=" + MaskingUtil.mask()
+                    + ", passwordConfirm=" + MaskingUtil.mask()
+                    + ", nickname=" + nickname
+                    + ", phone=" + MaskingUtil.maskPhone(phone)
+                    + ", termsMap=" + termsMap + "]";
+        }
 }
