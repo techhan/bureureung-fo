@@ -38,12 +38,12 @@ import java.util.Map;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+
     private final UserTermsRepository userTermsRepository;
-    private final PasswordVerificationRepository passwordVerificationRepository;
     private final UserTermsHistoryRepository userTermsHistoryRepository;
-    private final AuthService authService;
     private final WithdrawalHistoryRepository withdrawalHistoryRepository;
 
     @Transactional
@@ -71,12 +71,7 @@ public class UserService {
     public UserProfileResponse updateProfile(Long userId, UserProfileRequest request) {
         FoUser findUser = userRepository.getByIdOrThrow(userId);
 
-        PasswordVerification passwordVerification = passwordVerificationRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
-
-        if (!request.token().equals(passwordVerification.getToken())) {
-            throw new CustomException(ErrorCode.INVALID_TOKEN);
-        }
+        authService.consumePasswordVerification(userId, request.token());
 
         List<FoUserTerms> termsList = userTermsRepository.findByFoUserId(userId);
 
@@ -90,11 +85,7 @@ public class UserService {
             }
         });
 
-        UserProfileResponse response = UserProfileResponse.of(findUser, termsList);
-
-        passwordVerificationRepository.deleteById(userId);
-
-        return response;
+        return UserProfileResponse.of(findUser, termsList);
     }
 
     @Transactional

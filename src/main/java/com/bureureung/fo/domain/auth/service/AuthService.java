@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.swing.plaf.PanelUI;
 import java.util.UUID;
 
 @Service
@@ -89,5 +90,16 @@ public class AuthService {
 
     public void deleteRefreshToken(Long userId) {
         refreshTokenRepository.deleteById(userId);
+    }
+
+    public void consumePasswordVerification(Long userId, String token) {
+        PasswordVerification passwordVerification = passwordVerificationRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
+
+        if (!token.equals(passwordVerification.getToken())) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+
+        passwordVerificationRepository.deleteById(userId);
     }
 }

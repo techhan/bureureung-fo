@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
@@ -55,12 +56,9 @@ class UserServiceTest {
 
     @Mock
     PasswordEncoder passwordEncoder;
-    
-    @Mock
-    UserTermsRepository userTermsRepository;
 
     @Mock
-    PasswordVerificationRepository passwordVerificationRepository;
+    UserTermsRepository userTermsRepository;
 
     @Mock
     UserTermsHistoryRepository userTermsHistoryRepository;
@@ -301,10 +299,8 @@ class UserServiceTest {
         );
 
         String token = "verification-token";
-        PasswordVerification passwordVerification = PasswordVerification.of(userId, token);
 
         given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
-        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
         given(userTermsRepository.findByFoUserId(userId)).willReturn(originTerms);
 
         Map<TermsType, Boolean> newTerms = Map.of(
@@ -326,8 +322,6 @@ class UserServiceTest {
                 .filter(t -> t.termsType() == TermsType.MARKETING)
                 .findFirst().orElseThrow();
         assertThat(marketingTerm.isAgreed()).isTrue();
-
-        verify(passwordVerificationRepository).deleteById(userId);
 
         ArgumentCaptor<FoUserTermsHistory> historyCaptor = ArgumentCaptor.forClass(FoUserTermsHistory.class);
         verify(userTermsHistoryRepository).save(historyCaptor.capture());
@@ -358,7 +352,6 @@ class UserServiceTest {
 
         // then
         verify(userTermsRepository, never()).findByFoUserId(any());
-        verify(passwordVerificationRepository, never()).deleteById(any());
     }
 
     @Test
@@ -376,7 +369,8 @@ class UserServiceTest {
                 newTerms);
 
         given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
-        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(PasswordVerification.of(userId, "invalid-token")));
+        willThrow(new CustomException(ErrorCode.INVALID_TOKEN))
+                .given(authService).consumePasswordVerification(eq(userId), eq("token"));
 
         // when
         assertThatThrownBy(() -> userService.updateProfile(userId, request))
@@ -384,7 +378,6 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
 
         verify(userTermsRepository, never()).findByFoUserId(any());
-        verify(passwordVerificationRepository, never()).deleteById(any());
     }
 
     @Test
@@ -400,10 +393,13 @@ class UserServiceTest {
                 TermsType.NIGHT_MARKETING, false);
 
         given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
-        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
 
         UserProfileRequest request = new UserProfileRequest("token", "닉네임수정", "01011111111",
                 newTerms);
+
+        given(userRepository.getByIdOrThrow(userId)).willReturn(originUser);
+        willThrow(new CustomException(ErrorCode.INVALID_TOKEN))
+                .given(authService).consumePasswordVerification(eq(userId), eq("token"));
 
         // when
         assertThatThrownBy(() -> userService.updateProfile(userId, request))
@@ -411,14 +407,13 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
 
         verify(userTermsRepository, never()).findByFoUserId(any());
-        verify(passwordVerificationRepository, never()).deleteById(any());
     }
 
     @Test
     void 회원_탈퇴를_성공한다() {
         Long userId = 1L;
         FoUser user
-            = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+                = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
         ReflectionTestUtils.setField(user, "id", userId);
         WithdrawRequest request = new WithdrawRequest(WithdrawReason.DELIVERY_FEE, null);
         given(userRepository.getByIdOrThrow(userId)).willReturn(user);
@@ -437,7 +432,7 @@ class UserServiceTest {
     void 탈퇴한_회원이_탈퇴를_재시도하면_예외가_발생한다() {
         Long userId = 1L;
         FoUser user
-            = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
+                = FoUser.of("test@test.com", "abc12345!!", "테스트", "01012341234");
         ReflectionTestUtils.setField(user, "id", userId);
         ReflectionTestUtils.setField(user, "status", UserStatus.DELETED);
 
@@ -445,10 +440,10 @@ class UserServiceTest {
         given(userRepository.getByIdOrThrow(userId)).willReturn(user);
 
         assertThatThrownBy(() -> userService.withdraw(userId, request))
-            .isInstanceOf(CustomException.class)
-            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ALREADY_WITHDRAWN);
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ALREADY_WITHDRAWN);
 
-        verify(withdrawalHistoryRepository,never()).save(any());
+        verify(withdrawalHistoryRepository, never()).save(any());
         verify(authService, never()).deleteRefreshToken(any());
     }
 
@@ -460,10 +455,10 @@ class UserServiceTest {
         given(userRepository.getByIdOrThrow(userId)).willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
 
         assertThatThrownBy(() -> userService.withdraw(userId, request))
-            .isInstanceOf(CustomException.class)
-            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
 
-        verify(withdrawalHistoryRepository,never()).save(any());
+        verify(withdrawalHistoryRepository, never()).save(any());
         verify(authService, never()).deleteRefreshToken(any());
     }
 

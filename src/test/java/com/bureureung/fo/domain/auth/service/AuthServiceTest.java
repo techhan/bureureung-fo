@@ -198,11 +198,11 @@ class AuthServiceTest {
         String token = "access-token";
 
         willThrow(new CustomException(ErrorCode.INVALID_TOKEN))
-            .given(jwtProvider).validateRefreshToken(token);
+                .given(jwtProvider).validateRefreshToken(token);
 
         assertThatThrownBy(() -> authService.refresh(token))
-            .isInstanceOf(CustomException.class)
-            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
 
         verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
     }
@@ -258,5 +258,37 @@ class AuthServiceTest {
 
         // then
         verify(passwordVerificationRepository, never()).save(any());
+    }
+
+    @Test
+    void 비밀번호_인증_토큰을_검증하고_소각한다() {
+        Long userId = 1L;
+        String token = "verification-token";
+        PasswordVerification passwordVerification = PasswordVerification.of(userId, token);
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
+
+        authService.consumePasswordVerification(userId, token);
+
+        verify(passwordVerificationRepository).deleteById(userId);
+    }
+
+    @Test
+    void 저장된_토큰이_없으면_예외가_발생한다() {
+        Long userId = 1L;
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.consumePasswordVerification(userId, "tokkkken")).isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
+    }
+
+    @Test
+    void 토큰이_일치하지_않으면_예외가_발생한다() {
+        Long userId = 1L;
+        PasswordVerification passwordVerification = PasswordVerification.of(userId, "one-token");
+        given(passwordVerificationRepository.findById(userId)).willReturn(Optional.of(passwordVerification));
+
+        assertThatThrownBy(() -> authService.consumePasswordVerification(userId, "two-token"))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_TOKEN);
     }
 }
