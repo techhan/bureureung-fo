@@ -11,12 +11,12 @@ public record EmailVerifyRequest(
         String email,
 
         @NotBlank(message = "인증 코드는 필수입니다.")
-        @Size(min = 6, max = 6)
+        @Size(min = 6, max = 6, message = "인증 코드를 다시 한 번 확인해주세요.")
         String code) {
 
-        @Override
-        public String toString() {
-                return "EmailVerifyRequest[email=" + MaskingUtil.maskEmail(email)
-                                        + ", code=" + MaskingUtil.mask() +"]";
-        }
+    @Override
+    public String toString() {
+        return "EmailVerifyRequest[email=" + MaskingUtil.maskEmail(email)
+                + ", code=" + MaskingUtil.mask() + "]";
+    }
 }

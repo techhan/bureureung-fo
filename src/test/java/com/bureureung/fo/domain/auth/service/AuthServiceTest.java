@@ -119,7 +119,7 @@ class AuthServiceTest {
         String email = "test@test.com";
         String password = "abc12345!";
 
-        FoUser user = FoUser.of(email, "12345ab!", "<UNK>", "01012341234");
+        FoUser user = FoUser.of(email, "12345ab!", "nicknamme", "01012341234");
         user.withdraw();
 
         given(userRepository.findByEmail(email)).willReturn(Optional.of(user));

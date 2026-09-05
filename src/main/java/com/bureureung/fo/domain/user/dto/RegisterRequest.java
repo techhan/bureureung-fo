@@ -11,24 +11,20 @@ import java.util.Map;
 public record RegisterRequest(
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "이메일 형식이 올바르지 않습니다.")
-        @Pattern(
-                regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
-                message = "이메일 형식이 올바르지 않습니다."
-        )
-        @Size(min = 5, max = 100, message = "이메일은 100자를 초과할 수 없습니다.")
+        @Size(min = 5, message = "이메일 다시 한 번 확인해주세요.")
         String email,
 
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,20}$",
-                message = "비밀번호는 영문 대소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
+                message = "비밀번호는 영문 소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
         )
         String password,
 
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,20}$",
-                message = "비밀번호는 영문 대소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
+                message = "비밀번호는 영문 소문자, 숫자, 특수문자(!@#$%^&*)를 모두 포함해야 합니다."
         )
         String passwordConfirm,
 
@@ -46,13 +42,13 @@ public record RegisterRequest(
         @NotNull(message = "약관 동의는 필수입니다.")
         Map<TermsType, Boolean> termsMap) {
 
-        @Override
-        public String toString() {
-                return "RegisterRequest[email=" + MaskingUtil.maskEmail(email)
-                    + ", password=" + MaskingUtil.mask()
-                    + ", passwordConfirm=" + MaskingUtil.mask()
-                    + ", nickname=" + nickname
-                    + ", phone=" + MaskingUtil.maskPhone(phone)
-                    + ", termsMap=" + termsMap + "]";
-        }
+    @Override
+    public String toString() {
+        return "RegisterRequest[email=" + MaskingUtil.maskEmail(email)
+                + ", password=" + MaskingUtil.mask()
+                + ", passwordConfirm=" + MaskingUtil.mask()
+                + ", nickname=" + nickname
+                + ", phone=" + MaskingUtil.maskPhone(phone)
+                + ", termsMap=" + termsMap + "]";
+    }
 }

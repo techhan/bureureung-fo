@@ -103,7 +103,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void 잘묏된_이메일_또는_비밀번호를_입력하면_401을_응답한다() throws Exception {
+    void 잘못된_이메일_또는_비밀번호를_입력하면_401을_응답한다() throws Exception {
         // given
         LoginRequest request = new LoginRequest("test@test.com", "password1234!!");
 
@@ -160,15 +160,15 @@ class AuthControllerTest {
         var verifyPasswordRequest = new VerifyPasswordRequest(password);
 
         given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
-        given(authService.verifyPassword(eq(userId),any(VerifyPasswordRequest.class))).willReturn(token);
+        given(authService.verifyPassword(eq(userId), any(VerifyPasswordRequest.class))).willReturn(token);
 
         mockMvc.perform(post("/api/v1/auth/password-verify")
-            .header("Authorization", "Bearer " + token)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(verifyPasswordRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data").value(token))
-            .andDo(print());
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(verifyPasswordRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(token))
+                .andDo(print());
     }
 
     @Test
@@ -179,11 +179,11 @@ class AuthControllerTest {
         given(jwtProvider.validateAndGetUserId(token)).willReturn(userId);
 
         mockMvc.perform(post("/api/v1/auth/password-verify")
-            .header("Authorization", "Bearer " + token)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(new VerifyPasswordRequest(null))))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("COMMON_E001"))
-            .andDo(print());
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new VerifyPasswordRequest(null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_E001"))
+                .andDo(print());
     }
 }
